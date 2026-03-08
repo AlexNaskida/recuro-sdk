@@ -1,0 +1,60 @@
+{
+  "name": "@solana-subscription/sdk",
+  "version": "1.0.0",
+  "description": "Non-custodial recurring USDC subscription SDK for Solana",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.esm.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "lint": "eslint src --ext .ts,.tsx --max-warnings 0",
+    "test": "vitest run"
+  },
+  "keywords": [
+    "solana",
+    "subscription",
+    "usdc",
+    "anchor",
+    "defi",
+    "payments",
+    "recurring"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@coral-xyz/anchor": "^0.29.0",
+    "@solana/web3.js": "^1.87.0",
+    "@solana/spl-token": "^0.3.11",
+    "react": "^18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@coral-xyz/anchor": "^0.29.0",
+    "@solana/spl-token": "^0.3.11",
+    "@solana/web3.js": "^1.87.0",
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.2.0",
+    "react": "^18.2.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.2.0"
+  },
+  "dependencies": {
+    "@clockwork-xyz/sdk": "0.3.4",
+    "bn.js": "^5.2.1"
+  }
+}
