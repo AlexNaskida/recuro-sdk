@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "description": "Non-custodial recurring USDC subscription SDK for Solana",
   "main": "dist/index.js",
-  "module": "dist/index.esm.js",
+  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.esm.js",
+      "import": "./dist/index.mjs",
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
     }
@@ -33,8 +33,8 @@
   "license": "MIT",
   "peerDependencies": {
     "@coral-xyz/anchor": "^0.29.0",
+    "@solana/spl-token": "^0.1.8",
     "@solana/web3.js": "^1.87.0",
-    "@solana/spl-token": "^0.3.11",
     "react": "^18.0.0"
   },
   "peerDependenciesMeta": {
@@ -44,17 +44,19 @@
   },
   "devDependencies": {
     "@coral-xyz/anchor": "^0.29.0",
-    "@solana/spl-token": "^0.3.11",
+    "@solana/spl-token": "^0.1.8",
     "@solana/web3.js": "^1.87.0",
+    "@types/bn.js": "^5.2.0",
     "@types/node": "^20.0.0",
     "@types/react": "^18.2.0",
     "react": "^18.2.0",
     "tsup": "^8.0.0",
     "typescript": "^5.3.0",
-    "vitest": "^1.2.0"
+    "vitest": "^4.0.18"
   },
   "dependencies": {
     "@clockwork-xyz/sdk": "0.3.4",
-    "bn.js": "^5.2.1"
+    "bn.js": "^5.2.1",
+    "vite": "7.3.1"
   }
 }

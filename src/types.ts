@@ -1,7 +1,6 @@
 import type { PublicKey } from "@solana/web3.js";
 import type BN from "bn.js";
 
-// ── Cluster ───────────────────────────────────────────────────────────────────
 export type Cluster = "devnet" | "mainnet-beta" | "localnet";
 
 // ── On-chain account shapes ───────────────────────────────────────────────────
@@ -13,7 +12,7 @@ export interface PlanAccount {
   name:                 string;
   description:          string;
   imageUrl:             string;
-  amountUsdc:           BN;         // micro-USDC
+  amountUsdc:           BN;
   intervalSeconds:      BN;
   trialSeconds:         BN;
   gracePeriodSeconds:   BN;
@@ -24,7 +23,7 @@ export interface PlanAccount {
   feesPaid:             BN;
   successfulPayments:   BN;
   failedPayments:       BN;
-  totalRevenue:         BN;         // alias for grossRevenue (net)
+  totalRevenue:         BN;
   createdAt:            BN;
   updatedAt:            BN;
   status:               "Active" | "Paused" | "Archived";
@@ -32,23 +31,24 @@ export interface PlanAccount {
 }
 
 export interface SubscriptionAccount {
-  publicKey:               PublicKey;
-  plan:                    PublicKey;
-  subscriber:              PublicKey;
-  subscriberTokenAccount:  PublicKey;
-  thread:                  PublicKey;
-  amountUsdc:              BN;
-  intervalSeconds:         BN;
-  nextPaymentAt:           BN;
-  startedAt:               BN;
-  lastPaidAt:              BN;
-  lastFailedAt:            BN;
-  totalPaid:               BN;
-  paymentCount:            BN;
-  consecutiveFailures:     number;
-  totalFailures:           number;
-  status:                  "Active" | "Cancelled" | "Expired" | "PastDue";
-  bump:                    number;
+  publicKey:              PublicKey;
+  plan:                   PublicKey;
+  subscriber:             PublicKey;
+  subscriberTokenAccount: PublicKey;
+  amountUsdc:             BN;
+  intervalSeconds:        BN;
+  nextPaymentAt:          BN;
+  startedAt:              BN;
+  endedAt:                BN;   // 0 if still active
+  lastPaidAt:             BN;
+  lastFailedAt:           BN;
+  totalPaid:              BN;
+  paymentCount:           BN;
+  consecutiveFailures:    number;
+  failedPaymentCount:     number; // alias for consecutiveFailures
+  totalFailures:          number;
+  status:                 "Active" | "Paused" | "Cancelled" | "Expired";
+  bump:                   number;
 }
 
 export interface ProtocolConfigAccount {
@@ -62,15 +62,15 @@ export interface ProtocolConfigAccount {
 
 // ── SDK input params ──────────────────────────────────────────────────────────
 export interface CreatePlanParams {
-  planId:            number;
-  name:              string;
-  description?:      string;
-  imageUrl?:         string;
-  amountUsdc:        number;  // human USDC (e.g. 9.99)
-  intervalDays:      number;
-  trialDays?:        number;
-  gracePeriodDays?:  number;
-  maxSubscribers?:   number;  // 0 = unlimited
+  planId:           number;
+  name:             string;
+  description?:     string;
+  imageUrl?:        string;
+  amountUsdc:       number;
+  intervalDays:     number;
+  trialDays?:       number;
+  gracePeriodDays?: number;
+  maxSubscribers?:  number;
 }
 
 export interface UpdatePlanParams {
@@ -86,22 +86,16 @@ export interface CreateSubscriptionParams {
 }
 
 // ── SDK result types ──────────────────────────────────────────────────────────
-export interface TxResult {
-  signature: string;
-}
-
-export interface CreatePlanResult extends TxResult {
-  planPubkey: PublicKey;
-}
-
-export interface CreateSubscriptionResult extends TxResult {
-  subscriptionPubkey: PublicKey;
-}
+export interface TxResult { signature: string; }
+export interface CreatePlanResult extends TxResult { planPubkey: PublicKey; }
+export interface CreateSubscriptionResult extends TxResult { subscriptionPubkey: PublicKey; }
 
 // ── Analytics ─────────────────────────────────────────────────────────────────
 export interface RevenueDataPoint {
-  date:    string;
-  revenue: number;
+  date:       string;
+  revenue:    number;
+  daily:      number;
+  cumulative: number;
 }
 
 export interface SubscriptionTrendPoint {
@@ -109,34 +103,64 @@ export interface SubscriptionTrendPoint {
   new:       number;
   active:    number;
   cancelled: number;
+  expired:   number;
+  net:       number;
+}
+
+export interface ChurnDataPoint {
+  date:      string;
+  churned:   number;
+  churnRate: number;
+}
+
+export interface MRRDataPoint {
+  date:   string;
+  mrr:    number;
+  growth: number;
 }
 
 export interface PlanMetrics {
   planPubkey:        string;
+  planId:            number;
   name:              string;
+  amountUsdc:        number;
+  intervalDays:      number;
   activeSubscribers: number;
   totalRevenue:      number;
   mrr:               number;
+  status:            "Active" | "Paused" | "Archived";
+  conversionRate:    number;
   churnRate:         number;
   successRate:       number;
 }
 
 export interface MerchantAnalytics {
-  totalRevenue:           number;
-  activeSubscriptions:    number;
-  cancelledSubscriptions: number;
-  expiredSubscriptions:   number;
-  totalSubscriptions:     number;
-  failedPayments:         number;
-  successfulPayments:     number;
-  churnRate:              number;
-  successRate:            number;
-  revenueOverTime:        RevenueDataPoint[];
-  subscriptionsTrend:     SubscriptionTrendPoint[];
-  plans:                  PlanMetrics[];
+  totalRevenue:              number;
+  monthlyRecurringRevenue:   number;
+  annualRecurringRevenue:    number;
+  activeSubscriptions:       number;
+  totalSubscriptions:        number;
+  cancelledSubscriptions:    number;
+  expiredSubscriptions:      number;
+  pausedSubscriptions:       number;
+  newSubscriptionsThisMonth: number;
+  churnRate:                 number;
+  averageRevenuePerUser:     number;
+  lifetimeValue:             number;
+  totalFailedPayments:       number;
+  successfulPayments:        number;
+  successRate:               number;
+  revenueOverTime:           RevenueDataPoint[];
+  subscriptionsTrend:        SubscriptionTrendPoint[];
+  churnOverTime:             ChurnDataPoint[];
+  mrr:                       MRRDataPoint[];
+  planMetrics:               PlanMetrics[];
+  recentExecutions:          ExecutionLogEntry[];
+  // legacy aliases used by dashboard
+  plans?:          PlanMetrics[];
+  failedPayments?: number;
 }
 
-// Alias used by dashboard app
 export type AnalyticsData = MerchantAnalytics;
 
 // ── Execution log ─────────────────────────────────────────────────────────────
@@ -152,45 +176,43 @@ export interface ExecutionLogEntry {
   success:      boolean;
 }
 
-// ── SDK config ────────────────────────────────────────────────────────────────
 export interface SdkConfig {
-  cluster?:    Cluster;
-  programId?:  string;
-  usdcMint?:   string;
+  cluster?:   Cluster;
+  programId?: string;
+  usdcMint?:  string;
 }
 
-// ── Event types ───────────────────────────────────────────────────────────────
+// ── Events ────────────────────────────────────────────────────────────────────
 export type PaymentExecutedEvent = {
   subscription:  PublicKey;
   plan:          PublicKey;
   subscriber:    PublicKey;
   merchant:      PublicKey;
-  grossAmount:   BN;
-  protocolFee:   BN;
-  netAmount:     BN;
-  paymentNumber: BN;
-  nextPaymentAt: BN;
+  amountUsdc:    BN;
+  feeUsdc:       BN;
+  totalCharged:  BN;
+  paymentCount:  BN;
   timestamp:     BN;
 };
 
 export type PaymentFailedEvent = {
-  subscription:        PublicKey;
-  subscriber:          PublicKey;
-  plan:                PublicKey;
-  reason:              Record<string, Record<string, never>>;
-  consecutiveFailures: number;
-  retryAt:             BN;
-  timestamp:           BN;
+  subscription: PublicKey;
+  subscriber:   PublicKey;
+  plan:         PublicKey;
+  reason:       string;
+  failedCount:  number;
+  willExpire:   boolean;
+  timestamp:    BN;
 };
 
 export type SubscriptionCreatedEvent = {
-  subscription:   PublicKey;
-  plan:           PublicKey;
-  subscriber:     PublicKey;
-  amountUsdc:     BN;
-  trialEndsAt:    BN;
-  firstPaymentAt: BN;
-  timestamp:      BN;
+  subscription:  PublicKey;
+  plan:          PublicKey;
+  subscriber:    PublicKey;
+  amountUsdc:    BN;
+  trialEndsAt:   BN;
+  nextPaymentAt: BN;
+  timestamp:     BN;
 };
 
 export type SubscriptionCancelledEvent = {
