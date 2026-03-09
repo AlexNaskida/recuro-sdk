@@ -28,11 +28,11 @@ import {
   CLOCKWORK_THREAD_PROGRAM_ID,
   LIMITS,
   PROGRAM_ID,
-  USDC_MINTS,
+  USDC_MINT,
 } from "./constants";
 import { getPlanPDA, getSubscriptionPDA, getThreadPDA } from "./utils/pda";
 import { buildAnalytics } from "./utils/analytics";
-import { /*microToUsdc,*/ usdcToMicro } from "./utils/format";
+import { microToUsdc, usdcToMicro } from "./utils/format";
 import type {
   Cluster,
   CreatePlanParams,
@@ -48,22 +48,22 @@ import type {
 } from "./types";
 
 export class SubscriptionSdk {
-  readonly provider: AnchorProvider;
-  readonly program: Program;
-  readonly usdcMint: PublicKey;
+  readonly provider:  AnchorProvider;
+  readonly program:   Program;
+  readonly usdcMint:  PublicKey;
   readonly programId: PublicKey;
-  readonly cluster: Cluster;
+  readonly cluster:   Cluster;
 
   constructor(provider: AnchorProvider, config: SdkConfig = {}) {
-    this.provider = provider;
-    this.cluster = config.cluster ?? "devnet";
+    this.provider  = provider;
+    this.cluster   = config.cluster ?? "devnet";
     this.programId = config.programId
       ? new PublicKey(config.programId)
       : PROGRAM_ID;
     this.usdcMint = config.usdcMint
       ? new PublicKey(config.usdcMint)
-      : USDC_MINTS[this.cluster];
-    this.program = new Program(IDL as unknown as Idl, this.programId, provider);
+      : USDC_MINT[this.cluster];
+    this.program = new Program(IDL as Idl, this.programId, provider);
   }
 
   // ──────────────────────────────────────────────────────────
@@ -79,34 +79,34 @@ export class SubscriptionSdk {
     this.validateCreatePlanParams(params);
 
     const merchant = this.provider.wallet.publicKey;
-    const planId = BN.isBN(params.planId)
+    const planId   = BN.isBN(params.planId)
       ? params.planId
       : new BN(params.planId);
 
     const [planPubkey] = getPlanPDA(merchant, planId, this.programId);
     const merchantTokenAccount = await getAssociatedTokenAddress(
       this.usdcMint,
-      merchant,
+      merchant
     );
 
     const signature = await this.program.methods
       .createPlan({
         planId,
-        name: params.name,
-        description: params.description ?? "",
-        amountUsdc: usdcToMicro(params.amountUsdc),
-        intervalSeconds: new BN(params.intervalDays * 86_400),
-        trialSeconds: new BN((params.trialDays ?? 0) * 86_400),
-        maxSubscribers: new BN(params.maxSubscribers ?? 0),
+        name:            params.name,
+        description:     params.description ?? "",
+        amountUsdc:      usdcToMicro(params.amountUsdc),
+        intervalSeconds: new BN((params.intervalDays * 86_400)),
+        trialSeconds:    new BN(((params.trialDays ?? 0) * 86_400)),
+        maxSubscribers:  new BN((params.maxSubscribers ?? 0)),
       })
       .accounts({
         merchant,
-        usdcMint: this.usdcMint,
+        usdcMint:              this.usdcMint,
         merchantTokenAccount,
-        plan: planPubkey,
-        tokenProgram: TOKEN_PROGRAM_ID,
+        plan:                  planPubkey,
+        tokenProgram:          TOKEN_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-        systemProgram: SystemProgram.programId,
+        systemProgram:         SystemProgram.programId,
       })
       .rpc({ commitment: this.provider.opts.commitment });
 
@@ -119,15 +119,16 @@ export class SubscriptionSdk {
    */
   async updatePlan(params: UpdatePlanParams): Promise<TransactionSignature> {
     const merchant = this.provider.wallet.publicKey;
-    const plan = await this.fetchPlan(params.planPubkey);
+    const plan     = await this.fetchPlan(params.planPubkey);
     if (!plan) throw new Error("Plan not found");
 
     return this.program.methods
       .updatePlan({
-        name: params.name ?? null,
-        description: params.description ?? null,
-        maxSubscribers:
-          params.maxSubscribers != null ? new BN(params.maxSubscribers) : null,
+        name:            params.name ?? null,
+        description:     params.description ?? null,
+        maxSubscribers:  params.maxSubscribers != null
+          ? new BN(params.maxSubscribers)
+          : null,
       })
       .accounts({
         merchant,
@@ -141,11 +142,7 @@ export class SubscriptionSdk {
     const merchant = this.provider.wallet.publicKey;
     return this.program.methods
       .archivePlan()
-      .accounts({
-        merchant,
-        plan: planPubkey,
-        systemProgram: SystemProgram.programId,
-      })
+      .accounts({ merchant, plan: planPubkey, systemProgram: SystemProgram.programId })
       .rpc({ commitment: this.provider.opts.commitment });
   }
 
@@ -165,48 +162,46 @@ export class SubscriptionSdk {
    * The subscriber signs once. All future payments are automatic.
    */
   async createSubscription(
-    params: CreateSubscriptionParams,
+    params: CreateSubscriptionParams
   ): Promise<CreateSubscriptionResult> {
     const subscriber = this.provider.wallet.publicKey;
-    const plan = await this.fetchPlan(params.planPubkey);
-    if (!plan)
-      throw new Error(`Plan not found: ${params.planPubkey.toBase58()}`);
-    if (plan.status !== "Active")
-      throw new Error("Plan is not accepting new subscribers");
+    const plan       = await this.fetchPlan(params.planPubkey);
+    if (!plan) throw new Error(`Plan not found: ${params.planPubkey.toBase58()}`);
+    if (plan.status !== "Active") throw new Error("Plan is not accepting new subscribers");
 
     const [subscriptionPubkey, bump] = getSubscriptionPDA(
       params.planPubkey,
       subscriber,
-      this.programId,
+      this.programId
     );
     const [threadPubkey] = getThreadPDA(subscriptionPubkey);
     const subscriberTokenAccount = await getAssociatedTokenAddress(
       this.usdcMint,
-      subscriber,
+      subscriber
     );
 
     // Approve the subscription PDA as SPL delegate (12 cycles)
     const approveAmount = plan.amountUsdc.muln(LIMITS.DELEGATE_CYCLES);
     const approveIx = createApproveInstruction(
       subscriberTokenAccount,
-      subscriptionPubkey, // delegate = subscription PDA (program-controlled)
+      subscriptionPubkey,      // delegate = subscription PDA (program-controlled)
       subscriber,
-      BigInt(approveAmount.toString()),
+      BigInt(approveAmount.toString())
     );
 
     const signature = await this.program.methods
       .createSubscription(bump)
       .accounts({
         subscriber,
-        plan: params.planPubkey,
-        subscription: subscriptionPubkey,
+        plan:                    params.planPubkey,
+        subscription:            subscriptionPubkey,
         subscriberTokenAccount,
-        usdcMint: this.usdcMint,
-        thread: threadPubkey,
-        clockworkProgram: CLOCKWORK_THREAD_PROGRAM_ID,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-        systemProgram: SystemProgram.programId,
+        usdcMint:                this.usdcMint,
+        thread:                  threadPubkey,
+        clockworkProgram:        CLOCKWORK_THREAD_PROGRAM_ID,
+        tokenProgram:            TOKEN_PROGRAM_ID,
+        associatedTokenProgram:  ASSOCIATED_TOKEN_PROGRAM_ID,
+        systemProgram:           SystemProgram.programId,
       })
       .preInstructions([approveIx])
       .rpc({ commitment: this.provider.opts.commitment });
@@ -216,15 +211,15 @@ export class SubscriptionSdk {
 
   /** Pause an active subscription (subscriber or merchant). */
   async pauseSubscription(
-    subscriptionPubkey: PublicKey,
+    subscriptionPubkey: PublicKey
   ): Promise<TransactionSignature> {
     const sub = await this._requireSubscription(subscriptionPubkey);
     return this.program.methods
       .pauseSubscription()
       .accounts({
-        authority: this.provider.wallet.publicKey,
+        authority:    this.provider.wallet.publicKey,
         subscription: subscriptionPubkey,
-        plan: sub.plan,
+        plan:         sub.plan,
         systemProgram: SystemProgram.programId,
       })
       .rpc({ commitment: this.provider.opts.commitment });
@@ -232,15 +227,15 @@ export class SubscriptionSdk {
 
   /** Resume a paused subscription (subscriber or merchant). */
   async resumeSubscription(
-    subscriptionPubkey: PublicKey,
+    subscriptionPubkey: PublicKey
   ): Promise<TransactionSignature> {
     const sub = await this._requireSubscription(subscriptionPubkey);
     return this.program.methods
       .resumeSubscription()
       .accounts({
-        authority: this.provider.wallet.publicKey,
+        authority:    this.provider.wallet.publicKey,
         subscription: subscriptionPubkey,
-        plan: sub.plan,
+        plan:         sub.plan,
         systemProgram: SystemProgram.programId,
       })
       .rpc({ commitment: this.provider.opts.commitment });
@@ -248,15 +243,15 @@ export class SubscriptionSdk {
 
   /** Cancel a subscription (subscriber or merchant). Irreversible. */
   async cancelSubscription(
-    subscriptionPubkey: PublicKey,
+    subscriptionPubkey: PublicKey
   ): Promise<TransactionSignature> {
     const sub = await this._requireSubscription(subscriptionPubkey);
     return this.program.methods
       .cancelSubscription()
       .accounts({
-        authority: this.provider.wallet.publicKey,
+        authority:    this.provider.wallet.publicKey,
         subscription: subscriptionPubkey,
-        plan: sub.plan,
+        plan:         sub.plan,
         systemProgram: SystemProgram.programId,
       })
       .rpc({ commitment: this.provider.opts.commitment });
@@ -276,11 +271,10 @@ export class SubscriptionSdk {
   }
 
   async fetchSubscription(
-    subscriptionPubkey: PublicKey,
+    subscriptionPubkey: PublicKey
   ): Promise<SubscriptionAccount | null> {
     try {
-      const raw =
-        await this.program.account.subscription.fetch(subscriptionPubkey);
+      const raw = await this.program.account.subscription.fetch(subscriptionPubkey);
       return this._normalizeSubscription(subscriptionPubkey, raw);
     } catch {
       return null;
@@ -297,25 +291,25 @@ export class SubscriptionSdk {
 
   /** Fetch all subscriptions for a specific plan. */
   async fetchPlanSubscriptions(
-    planPubkey: PublicKey,
+    planPubkey: PublicKey
   ): Promise<SubscriptionAccount[]> {
     const accounts = await this.program.account.subscription.all([
       { memcmp: { offset: 8, bytes: planPubkey.toBase58() } },
     ]);
     return accounts.map((a) =>
-      this._normalizeSubscription(a.publicKey, a.account),
+      this._normalizeSubscription(a.publicKey, a.account)
     );
   }
 
   /** Fetch all subscriptions belonging to a subscriber wallet. */
   async fetchSubscriberSubscriptions(
-    subscriber: PublicKey,
+    subscriber: PublicKey
   ): Promise<SubscriptionAccount[]> {
     const accounts = await this.program.account.subscription.all([
       { memcmp: { offset: 8 + 32, bytes: subscriber.toBase58() } },
     ]);
     return accounts.map((a) =>
-      this._normalizeSubscription(a.publicKey, a.account),
+      this._normalizeSubscription(a.publicKey, a.account)
     );
   }
 
@@ -328,8 +322,8 @@ export class SubscriptionSdk {
    * Suitable for populating the Merchant Dashboard.
    */
   async getAnalytics(
-    merchant: PublicKey,
-    recentLogs?: ExecutionLogEntry[],
+    merchant:    PublicKey,
+    recentLogs?: ExecutionLogEntry[]
   ): Promise<MerchantAnalytics> {
     const plans = await this.fetchMerchantPlans(merchant);
     const allSubs: SubscriptionAccount[] = [];
@@ -338,7 +332,7 @@ export class SubscriptionSdk {
       plans.map(async (plan) => {
         const subs = await this.fetchPlanSubscriptions(plan.publicKey);
         allSubs.push(...subs);
-      }),
+      })
     );
 
     return buildAnalytics(plans, allSubs, recentLogs ?? []);
@@ -349,43 +343,43 @@ export class SubscriptionSdk {
   // ──────────────────────────────────────────────────────────
 
   onPaymentExecuted(
-    cb: (event: any, slot: number, signature: string) => void,
+    cb: (event: any, slot: number, signature: string) => void
   ): number {
     return this.program.addEventListener("PaymentExecuted", cb);
   }
 
   onPaymentFailed(
-    cb: (event: any, slot: number, signature: string) => void,
+    cb: (event: any, slot: number, signature: string) => void
   ): number {
     return this.program.addEventListener("PaymentFailed", cb);
   }
 
   onSubscriptionCreated(
-    cb: (event: any, slot: number, signature: string) => void,
+    cb: (event: any, slot: number, signature: string) => void
   ): number {
     return this.program.addEventListener("SubscriptionCreated", cb);
   }
 
   onSubscriptionCancelled(
-    cb: (event: any, slot: number, signature: string) => void,
+    cb: (event: any, slot: number, signature: string) => void
   ): number {
     return this.program.addEventListener("SubscriptionCancelled", cb);
   }
 
   onSubscriptionPaused(
-    cb: (event: any, slot: number, signature: string) => void,
+    cb: (event: any, slot: number, signature: string) => void
   ): number {
     return this.program.addEventListener("SubscriptionPaused", cb);
   }
 
   onSubscriptionResumed(
-    cb: (event: any, slot: number, signature: string) => void,
+    cb: (event: any, slot: number, signature: string) => void
   ): number {
     return this.program.addEventListener("SubscriptionResumed", cb);
   }
 
   onSubscriptionExpired(
-    cb: (event: any, slot: number, signature: string) => void,
+    cb: (event: any, slot: number, signature: string) => void
   ): number {
     return this.program.addEventListener("SubscriptionExpired", cb);
   }
@@ -403,16 +397,11 @@ export class SubscriptionSdk {
       throw new Error("Plan name is required");
     }
     if (p.name.length > LIMITS.MAX_PLAN_NAME_LEN) {
-      throw new Error(
-        `Plan name must be ≤ ${LIMITS.MAX_PLAN_NAME_LEN} characters`,
-      );
+      throw new Error(`Plan name must be ≤ ${LIMITS.MAX_PLAN_NAME_LEN} characters`);
     }
-    if (
-      p.amountUsdc < LIMITS.MIN_AMOUNT_USDC ||
-      p.amountUsdc > LIMITS.MAX_AMOUNT_USDC
-    ) {
+    if (p.amountUsdc < LIMITS.MIN_AMOUNT_USDC || p.amountUsdc > LIMITS.MAX_AMOUNT_USDC) {
       throw new Error(
-        `Amount must be between $${LIMITS.MIN_AMOUNT_USDC} and $${LIMITS.MAX_AMOUNT_USDC}`,
+        `Amount must be between $${LIMITS.MIN_AMOUNT_USDC} and $${LIMITS.MAX_AMOUNT_USDC}`
       );
     }
     if (
@@ -420,13 +409,13 @@ export class SubscriptionSdk {
       p.intervalDays > LIMITS.MAX_INTERVAL_DAYS
     ) {
       throw new Error(
-        `Interval must be between ${LIMITS.MIN_INTERVAL_DAYS} and ${LIMITS.MAX_INTERVAL_DAYS} days`,
+        `Interval must be between ${LIMITS.MIN_INTERVAL_DAYS} and ${LIMITS.MAX_INTERVAL_DAYS} days`
       );
     }
   }
 
   private async _requireSubscription(
-    pubkey: PublicKey,
+    pubkey: PublicKey
   ): Promise<SubscriptionAccount> {
     const sub = await this.fetchSubscription(pubkey);
     if (!sub) throw new Error(`Subscription not found: ${pubkey.toBase58()}`);
@@ -435,70 +424,69 @@ export class SubscriptionSdk {
 
   private _normalizePlan(pubkey: PublicKey, raw: any): PlanAccount {
     return {
-      publicKey: pubkey,
-      merchant: raw.merchant,
+      publicKey:            pubkey,
+      merchant:             raw.merchant,
       merchantTokenAccount: raw.merchantTokenAccount,
-      planId: raw.planId,
-      name: raw.name,
-      description: raw.description ?? "",
-      imageUrl: raw.imageUrl ?? "",
-      amountUsdc: raw.amountUsdc,
-      intervalSeconds: raw.intervalSeconds,
-      trialSeconds: raw.trialSeconds,
-      gracePeriodSeconds: raw.gracePeriodSeconds,
-      maxSubscribers: raw.maxSubscribers,
-      activeSubscribers: raw.activeSubscribers,
+      planId:               raw.planId,
+      name:                 raw.name,
+      description:          raw.description ?? "",
+      imageUrl:             raw.imageUrl ?? "",
+      amountUsdc:           raw.amountUsdc,
+      intervalSeconds:      raw.intervalSeconds,
+      trialSeconds:         raw.trialSeconds,
+      gracePeriodSeconds:   raw.gracePeriodSeconds,
+      maxSubscribers:       raw.maxSubscribers,
+      activeSubscribers:    raw.activeSubscribers,
       totalSubscribersEver: raw.totalSubscribersEver,
-      grossRevenue: raw.grossRevenue,
-      feesPaid: raw.feesPaid,
-      successfulPayments: raw.successfulPayments,
-      failedPayments: raw.failedPayments,
-      totalRevenue: raw.grossRevenue, // alias
-      createdAt: raw.createdAt,
-      updatedAt: raw.updatedAt,
-      status: this._decodePlanStatus(raw.status),
-      bump: raw.bump,
+      grossRevenue:         raw.grossRevenue,
+      feesPaid:             raw.feesPaid,
+      successfulPayments:   raw.successfulPayments,
+      failedPayments:       raw.failedPayments,
+      totalRevenue:         raw.grossRevenue,   // alias
+      createdAt:            raw.createdAt,
+      updatedAt:            raw.updatedAt,
+      status:               this._decodePlanStatus(raw.status),
+      bump:                 raw.bump,
     };
   }
 
   private _normalizeSubscription(
     pubkey: PublicKey,
-    raw: any,
+    raw:    any
   ): SubscriptionAccount {
     return {
-      publicKey: pubkey,
-      plan: raw.plan,
-      subscriber: raw.subscriber,
-      subscriberTokenAccount: raw.subscriberTokenAccount,
-      endedAt: raw.endedAt,
-      failedPaymentCount: raw.failedPaymentCount ?? 0,
-      amountUsdc: raw.amountUsdc,
-      intervalSeconds: raw.intervalSeconds,
-      nextPaymentAt: raw.nextPaymentAt,
-      startedAt: raw.startedAt,
-      lastPaidAt: raw.lastPaidAt,
-      lastFailedAt: raw.lastFailedAt,
-      totalPaid: raw.totalPaid,
-      paymentCount: raw.paymentCount,
-      consecutiveFailures: raw.consecutiveFailures ?? 0,
-      totalFailures: raw.totalFailures ?? 0,
-      status: this._decodeSubStatus(raw.status),
-      bump: raw.bump,
+      publicKey:               pubkey,
+      plan:                    raw.plan,
+      subscriber:              raw.subscriber,
+      subscriberTokenAccount:  raw.subscriberTokenAccount,
+      thread:                  raw.thread,
+      amountUsdc:              raw.amountUsdc,
+      intervalSeconds:         raw.intervalSeconds,
+      nextPaymentAt:           raw.nextPaymentAt,
+      startedAt:               raw.startedAt,
+      lastPaidAt:              raw.lastPaidAt,
+      lastFailedAt:            raw.lastFailedAt,
+      totalPaid:               raw.totalPaid,
+      paymentCount:            raw.paymentCount,
+      consecutiveFailures:     raw.consecutiveFailures ?? 0,
+      totalFailures:           raw.totalFailures ?? 0,
+      status:                  this._decodeSubStatus(raw.status),
+      bump:                    raw.bump,
     };
   }
 
   private _decodePlanStatus(status: any): PlanAccount["status"] {
-    if (status.active !== undefined) return "Active";
-    if (status.paused !== undefined) return "Paused";
+    if (status.active   !== undefined) return "Active";
+    if (status.paused   !== undefined) return "Paused";
     if (status.archived !== undefined) return "Archived";
     return "Active";
   }
 
   private _decodeSubStatus(status: any): SubscriptionAccount["status"] {
-    if (status.active !== undefined) return "Active";
-    if (status.pastDue !== undefined) return "Expired";
+    if (status.active    !== undefined) return "Active";
+    if (status.pastDue   !== undefined) return "PastDue";
     if (status.cancelled !== undefined) return "Cancelled";
-    if (status.expired !== undefined) return "Expired";
+    if (status.expired   !== undefined) return "Expired";
     return "Active";
   }
 }
