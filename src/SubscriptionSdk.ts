@@ -22,8 +22,7 @@ import {
   createApproveInstruction,
   getAssociatedTokenAddress,
 } from "@solana/spl-token";
-
-import IDL from "./idl.json";
+import IDL from "@/idl.json";
 import {
   CLOCKWORK_THREAD_PROGRAM_ID,
   LIMITS,
@@ -63,7 +62,7 @@ export class SubscriptionSdk {
     this.usdcMint = config.usdcMint
       ? new PublicKey(config.usdcMint)
       : USDC_MINT[this.cluster];
-    this.program = new Program(IDL as Idl, this.programId, provider);
+    this.program = new Program(IDL as unknown as Idl, this.programId, provider);
   }
 
   // ──────────────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 import { PublicKey } from "@solana/web3.js";
 
 export const PROGRAM_ID = new PublicKey(
-  "SUBxxxx1111111111111111111111111111111111111",
+  "E9zAmMEF69hTEYvqLQ2w1HC4ueyAoPfvstviRMUhwr5q",
 );
 
 export const CLOCKWORK_THREAD_PROGRAM_ID = new PublicKey(
