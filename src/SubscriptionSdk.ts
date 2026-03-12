@@ -19,17 +19,13 @@ import {
 import {
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
-  createApproveInstruction,
+  // createApproveInstruction,
   getAssociatedTokenAddress,
 } from "@solana/spl-token";
-import IDL from "@/idl.json";
-import {
-  CLOCKWORK_THREAD_PROGRAM_ID,
-  LIMITS,
-  PROGRAM_ID,
-  USDC_MINT,
-} from "./constants";
-import { getPlanPDA, getSubscriptionPDA, getThreadPDA } from "./utils/pda";
+import IDL from "./idl.json";
+import { LIMITS, PROGRAM_ID, USDC_MINT } from "./constants";
+// import { getPlanPDA, getSubscriptionPDA, getThreadPDA } from "./utils/pda";
+import { getPlanPDA, getSubscriptionPDA } from "./utils/pda";
 import { buildAnalytics } from "./utils/analytics";
 import { usdcToMicro } from "./utils/format";
 import type {
@@ -48,7 +44,7 @@ import type {
 
 export class SubscriptionSdk {
   readonly provider: AnchorProvider;
-  readonly program: Program;
+  readonly program: Program & { account: any; methods: any };
   readonly usdcMint: PublicKey;
   readonly programId: PublicKey;
   readonly cluster: Cluster;
@@ -62,7 +58,8 @@ export class SubscriptionSdk {
     this.usdcMint = config.usdcMint
       ? new PublicKey(config.usdcMint)
       : USDC_MINT[this.cluster];
-    this.program = new Program(IDL as unknown as Idl, this.programId, provider);
+    this.program = new Program(IDL as unknown as Idl, provider) as any;
+    // this.program = new Program(IDL as unknown as Idl, this.programId, provider);
   }
 
   // ──────────────────────────────────────────────────────────
@@ -173,41 +170,30 @@ export class SubscriptionSdk {
     if (plan.status !== "Active")
       throw new Error("Plan is not accepting new subscribers");
 
-    const [subscriptionPubkey, bump] = getSubscriptionPDA(
+    const [subscriptionPubkey] = getSubscriptionPDA(
       params.planPubkey,
       subscriber,
       this.programId,
     );
-    const [threadPubkey] = getThreadPDA(subscriptionPubkey);
+
+    // const subscriberTokenAccount = await getAssociatedTokenAddress(
+    //   this.usdcMint,
+    //   subscriber,
+    // );
     const subscriberTokenAccount = await getAssociatedTokenAddress(
       this.usdcMint,
       subscriber,
     );
 
-    // Approve the subscription PDA as SPL delegate (12 cycles)
-    const approveAmount = plan.amountUsdc.muln(LIMITS.DELEGATE_CYCLES);
-    const approveIx = createApproveInstruction(
-      subscriberTokenAccount,
-      subscriptionPubkey, // delegate = subscription PDA (program-controlled)
-      subscriber,
-      BigInt(approveAmount.toString()),
-    );
-
     const signature = await this.program.methods
-      .createSubscription(bump)
-      .accounts({
+      .createSubscription()
+      .accountsPartial({
         subscriber,
+        usdcMint: this.usdcMint,
         plan: params.planPubkey,
         subscription: subscriptionPubkey,
         subscriberTokenAccount,
-        usdcMint: this.usdcMint,
-        thread: threadPubkey,
-        clockworkProgram: CLOCKWORK_THREAD_PROGRAM_ID,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-        systemProgram: SystemProgram.programId,
       })
-      .preInstructions([approveIx])
       .rpc({ commitment: this.provider.opts.commitment });
 
     return { signature, subscriptionPubkey };
@@ -291,7 +277,9 @@ export class SubscriptionSdk {
     const accounts = await this.program.account.plan.all([
       { memcmp: { offset: 8, bytes: merchant.toBase58() } },
     ]);
-    return accounts.map((a) => this._normalizePlan(a.publicKey, a.account));
+    return accounts.map((a: { publicKey: PublicKey; account: any }) =>
+      this._normalizePlan(a.publicKey, a.account),
+    );
   }
 
   /** Fetch all subscriptions for a specific plan. */
@@ -301,7 +289,7 @@ export class SubscriptionSdk {
     const accounts = await this.program.account.subscription.all([
       { memcmp: { offset: 8, bytes: planPubkey.toBase58() } },
     ]);
-    return accounts.map((a) =>
+    return accounts.map((a: { publicKey: PublicKey; account: any }) =>
       this._normalizeSubscription(a.publicKey, a.account),
     );
   }
@@ -313,7 +301,7 @@ export class SubscriptionSdk {
     const accounts = await this.program.account.subscription.all([
       { memcmp: { offset: 8 + 32, bytes: subscriber.toBase58() } },
     ]);
-    return accounts.map((a) =>
+    return accounts.map((a: { publicKey: PublicKey; account: any }) =>
       this._normalizeSubscription(a.publicKey, a.account),
     );
   }

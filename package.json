@@ -56,6 +56,7 @@
   },
   "dependencies": {
     "@clockwork-xyz/sdk": "0.3.4",
+    "@coral-xyz/anchor": "^0.32.0",
     "bn.js": "^5.2.1"
   }
 }

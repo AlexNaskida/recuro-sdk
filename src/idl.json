@@ -1,5 +1,5 @@
 {
-  "address": "E9zAmMEF69hTEYvqLQ2w1HC4ueyAoPfvstviRMUhwr5q",
+  "address": "HoTMwTrd7g4fGBX547LzGbH9FKju8QNVFAd9FGMLHRxq",
   "metadata": {
     "name": "subscription",
     "version": "0.1.0",
@@ -388,6 +388,7 @@
           "docs": [
             "Subscriber's USDC ATA — must exist; funds stay here until billing"
           ],
+          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -1590,6 +1591,14 @@
           },
           {
             "name": "failed_payment_count",
+            "type": "u8"
+          },
+          {
+            "name": "billing_cycles",
+            "type": "u8"
+          },
+          {
+            "name": "cycles_remaining",
             "type": "u8"
           },
           {

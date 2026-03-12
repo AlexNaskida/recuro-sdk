@@ -1,12 +1,13 @@
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey, SystemProgram } from "@solana/web3.js";
 
 export const PROGRAM_ID = new PublicKey(
-  "E9zAmMEF69hTEYvqLQ2w1HC4ueyAoPfvstviRMUhwr5q",
+  "HoTMwTrd7g4fGBX547LzGbH9FKju8QNVFAd9FGMLHRxq",
 );
 
-export const CLOCKWORK_THREAD_PROGRAM_ID = new PublicKey(
-  "CLoCKi11111111111111111111111111111111111111",
-);
+// export const CLOCKWORK_THREAD_PROGRAM_ID = new PublicKey(
+//   "CLoCKi11111111111111111111111111111111111111",
+// );
+export const CLOCKWORK_THREAD_PROGRAM_ID = SystemProgram.programId; // unused placeholder
 
 /** USDC mint addresses */
 export const USDC_MINT = {
