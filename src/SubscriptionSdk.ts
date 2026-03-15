@@ -298,12 +298,27 @@ export class SubscriptionSdk {
   async fetchSubscriberSubscriptions(
     subscriber: PublicKey,
   ): Promise<SubscriptionAccount[]> {
-    const accounts = await this.program.account.subscription.all([
-      { memcmp: { offset: 8 + 32, bytes: subscriber.toBase58() } },
-    ]);
-    return accounts.map((a: { publicKey: PublicKey; account: any }) =>
-      this._normalizeSubscription(a.publicKey, a.account),
-    );
+    const connection = this.provider.connection;
+    const rawAccounts = await connection.getProgramAccounts(this.programId, {
+      filters: [
+        { dataSize: 173 },
+        { memcmp: { offset: 8 + 32, bytes: subscriber.toBase58() } },
+      ],
+    });
+
+    const results: SubscriptionAccount[] = [];
+    for (const { pubkey, account } of rawAccounts) {
+      try {
+        const decoded = (this.program.coder.accounts as any).decode(
+          "subscription",
+          account.data,
+        );
+        results.push(this._normalizeSubscription(pubkey, decoded));
+      } catch {
+        // skip stale layout
+      }
+    }
+    return results;
   }
 
   // ──────────────────────────────────────────────────────────
