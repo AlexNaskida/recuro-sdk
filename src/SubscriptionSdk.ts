@@ -231,6 +231,32 @@ export class SubscriptionSdk {
       .rpc({ commitment: this.provider.opts.commitment });
   }
 
+  /** Renew an expired subscription. Re-approves delegate for 12 new cycles. */
+  async renewSubscription(
+    subscriptionPubkey: PublicKey,
+    planPubkey: PublicKey,
+  ): Promise<{ signature: string; subscriptionPubkey: PublicKey }> {
+    const subscriber = this.provider.wallet.publicKey;
+
+    const subscriberTokenAccount = await getAssociatedTokenAddress(
+      this.usdcMint,
+      subscriber,
+    );
+
+    const signature = await this.program.methods
+      .renewSubscription()
+      .accountsPartial({
+        subscriber,
+        plan: planPubkey,
+        subscription: subscriptionPubkey,
+        subscriberTokenAccount,
+        usdcMint: this.usdcMint,
+      })
+      .rpc({ commitment: this.provider.opts.commitment });
+
+    return { signature, subscriptionPubkey };
+  }
+
   /** Cancel a subscription (subscriber or merchant). Irreversible. */
   async cancelSubscription(
     subscriptionPubkey: PublicKey,
