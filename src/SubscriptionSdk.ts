@@ -524,6 +524,7 @@ export class SubscriptionSdk {
 
   private _decodeSubStatus(status: any): SubscriptionAccount["status"] {
     if (status.active !== undefined) return "Active";
+    if (status.paused !== undefined) return "Paused";
     if (status.pastDue !== undefined) return "Expired";
     if (status.cancelled !== undefined) return "Cancelled";
     if (status.expired !== undefined) return "Expired";

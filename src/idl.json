@@ -350,7 +350,7 @@
         {
           "name": "subscription",
           "docs": [
-            "New Subscription PDA — one per (plan, subscriber) pair"
+            "Subscription PDA — created on first subscribe, reused on re-subscribe after cancel/expiry"
           ],
           "writable": true,
           "pda": {
@@ -497,6 +497,57 @@
         {
           "name": "rent",
           "address": "SysvarRent111111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "delete_plan",
+      "discriminator": [
+        41,
+        111,
+        169,
+        210,
+        93,
+        141,
+        108,
+        53
+      ],
+      "accounts": [
+        {
+          "name": "merchant",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "plan",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "merchant"
+              },
+              {
+                "kind": "account",
+                "path": "plan.plan_id",
+                "account": "Plan"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
@@ -1275,6 +1326,19 @@
       ]
     },
     {
+      "name": "PlanDeleted",
+      "discriminator": [
+        1,
+        61,
+        176,
+        29,
+        106,
+        184,
+        43,
+        164
+      ]
+    },
+    {
       "name": "PlanUpdated",
       "discriminator": [
         49,
@@ -1396,83 +1460,98 @@
     },
     {
       "code": 6008,
+      "name": "ActiveSubscriptionExists",
+      "msg": "An active or paused subscription already exists for this plan"
+    },
+    {
+      "code": 6009,
       "name": "SubscriptionNotActive",
       "msg": "Subscription is not in Active status"
     },
     {
-      "code": 6009,
+      "code": 6010,
       "name": "SubscriptionPaused",
       "msg": "Subscription is paused — resume before performing this action"
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "AlreadyCancelled",
       "msg": "Subscription has already been cancelled"
     },
     {
-      "code": 6011,
+      "code": 6012,
       "name": "AlreadyExpired",
       "msg": "Subscription has already expired due to repeated payment failures"
     },
     {
-      "code": 6012,
+      "code": 6013,
       "name": "InTrialPeriod",
       "msg": "Subscription is still within its trial period; no payment due yet"
     },
     {
-      "code": 6013,
+      "code": 6014,
       "name": "PaymentNotDue",
       "msg": "Next payment date has not been reached yet"
     },
     {
-      "code": 6014,
+      "code": 6015,
       "name": "UnauthorizedMerchant",
       "msg": "Only the merchant authority may perform this action on the plan"
     },
     {
-      "code": 6015,
+      "code": 6016,
       "name": "UnauthorizedActor",
       "msg": "Only the subscriber or merchant may perform this action"
     },
     {
-      "code": 6016,
+      "code": 6017,
       "name": "InsufficientBalance",
       "msg": "Subscriber token account has insufficient USDC balance"
     },
     {
-      "code": 6017,
+      "code": 6018,
       "name": "InvalidSubscriberTokenAccount",
       "msg": "Subscriber token account does not belong to the expected subscriber"
     },
     {
-      "code": 6018,
+      "code": 6019,
       "name": "InvalidMerchantTokenAccount",
       "msg": "Merchant token account does not belong to the plan's merchant"
     },
     {
-      "code": 6019,
+      "code": 6020,
       "name": "InvalidTreasuryTokenAccount",
       "msg": "Treasury token account does not belong to the protocol treasury"
     },
     {
-      "code": 6020,
+      "code": 6021,
       "name": "InvalidMint",
       "msg": "Token mint does not match the expected USDC mint"
     },
     {
-      "code": 6021,
+      "code": 6022,
       "name": "FeeTooHigh",
       "msg": "Fee basis points exceed the maximum allowed (500 bps = 5%)"
     },
     {
-      "code": 6022,
+      "code": 6023,
       "name": "ArithmeticOverflow",
       "msg": "Arithmetic overflow — value exceeds safe bounds"
     },
     {
-      "code": 6023,
+      "code": 6024,
       "name": "ArithmeticUnderflow",
       "msg": "Arithmetic underflow — value would go below zero"
+    },
+    {
+      "code": 6025,
+      "name": "PlanNotArchived",
+      "msg": "Plan must be archived before it can be deleted"
+    },
+    {
+      "code": 6026,
+      "name": "PlanHasActiveSubscribers",
+      "msg": "Plan still has active subscribers and cannot be deleted"
     }
   ],
   "types": [
@@ -1748,6 +1827,30 @@
           {
             "name": "trial_seconds",
             "type": "i64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PlanDeleted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "plan",
+            "type": "pubkey"
+          },
+          {
+            "name": "merchant",
+            "type": "pubkey"
+          },
+          {
+            "name": "plan_id",
+            "type": "u64"
           },
           {
             "name": "timestamp",
