@@ -24,7 +24,6 @@ import {
 } from "@solana/spl-token";
 import IDL from "./idl.json";
 import { LIMITS, PROGRAM_ID, USDC_MINT } from "./constants";
-// import { getPlanPDA, getSubscriptionPDA, getThreadPDA } from "./utils/pda";
 import { getPlanPDA, getSubscriptionPDA } from "./utils/pda";
 import { buildAnalytics } from "./utils/analytics";
 import { usdcToMicro } from "./utils/format";
@@ -156,7 +155,6 @@ export class SubscriptionSdk {
    *  1. Verifies the plan is Active with available capacity
    *  2. Creates a Subscription PDA (amount copied from Plan — no spoofing)
    *  3. Approves the Subscription PDA as SPL delegate for 12 billing cycles
-   *  4. Creates a Clockwork thread for automatic monthly payments
    *
    * The subscriber signs once. All future payments are automatic.
    */
