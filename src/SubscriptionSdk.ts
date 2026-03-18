@@ -93,6 +93,9 @@ export class SubscriptionSdk {
         intervalSeconds: new BN(params.intervalDays * 86_400),
         trialSeconds: new BN((params.trialDays ?? 0) * 86_400),
         maxSubscribers: new BN(params.maxSubscribers ?? 0),
+        merchantReceiveAddress: params.merchantReceiveAddress
+          ? new PublicKey(params.merchantReceiveAddress)
+          : null,
       })
       .accounts({
         merchant,
@@ -109,7 +112,7 @@ export class SubscriptionSdk {
   }
 
   /**
-   * Update mutable plan fields: name, description, maxSubscribers.
+   * Update mutable plan fields: name, description, maxSubscribers, merchantReceiveAddress.
    * Price and interval cannot be changed after creation.
    */
   async updatePlan(params: UpdatePlanParams): Promise<TransactionSignature> {
@@ -123,6 +126,9 @@ export class SubscriptionSdk {
         description: params.description ?? null,
         maxSubscribers:
           params.maxSubscribers != null ? new BN(params.maxSubscribers) : null,
+        merchantReceiveAddress: params.merchantReceiveAddress
+          ? new PublicKey(params.merchantReceiveAddress)
+          : null,
       })
       .accounts({
         merchant,
@@ -464,6 +470,7 @@ export class SubscriptionSdk {
       publicKey: pubkey,
       merchant: raw.merchant,
       merchantTokenAccount: raw.merchantTokenAccount,
+      merchantReceiveAddress: raw.merchantReceiveAddress,
       planId: raw.planId,
       name: raw.name,
       description: raw.description ?? "",
