@@ -304,12 +304,35 @@ export class SubscriptionSdk {
 
   /** Fetch all plans owned by a merchant wallet. */
   async fetchMerchantPlans(merchant: PublicKey): Promise<PlanAccount[]> {
-    const accounts = await this.program.account.plan.all([
-      { memcmp: { offset: 8, bytes: merchant.toBase58() } },
-    ]);
-    return accounts.map((a: { publicKey: PublicKey; account: any }) =>
-      this._normalizePlan(a.publicKey, a.account),
-    );
+    try {
+      const accounts = await this.program.account.plan.all([
+        { memcmp: { offset: 8, bytes: merchant.toBase58() } },
+      ]);
+      return accounts.map((a: { publicKey: PublicKey; account: any }) =>
+        this._normalizePlan(a.publicKey, a.account),
+      );
+    } catch {
+      // Fallback path: tolerate mixed historical layouts by decoding per account.
+      const connection = this.provider.connection;
+      const rawAccounts = await connection.getProgramAccounts(this.programId, {
+        filters: [{ memcmp: { offset: 8, bytes: merchant.toBase58() } }],
+      });
+
+      const results: PlanAccount[] = [];
+      for (const { pubkey, account } of rawAccounts) {
+        try {
+          const decoded = (this.program.coder.accounts as any).decode(
+            "plan",
+            account.data,
+          );
+          results.push(this._normalizePlan(pubkey, decoded));
+        } catch {
+          // Skip stale or incompatible account layouts.
+        }
+      }
+
+      return results;
+    }
   }
 
   /** Fetch all subscriptions for a specific plan. */

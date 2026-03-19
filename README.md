@@ -2,7 +2,7 @@
 
 TypeScript SDK for interacting with the on-chain Solana subscription program.
 
-This package is published as `@solana-subscription/sdk` and provides:
+This package is published as `@recuro/sdk` and provides:
 
 - A single high-level client class: `SubscriptionSdk`
 - Typed account and analytics models
@@ -12,7 +12,7 @@ This package is published as `@solana-subscription/sdk` and provides:
 
 ## Package Overview
 
-- Package name: `@solana-subscription/sdk`
+- Package name: `@recuro/sdk`
 - Entry point: `src/index.ts`
 - Output formats: CommonJS + ESM + typings
 - Build tool: `tsup`
@@ -50,7 +50,7 @@ sdk/
 ## Installation
 
 ```bash
-yarn add @solana-subscription/sdk
+yarn add @recuro/sdk
 ```
 
 Peer dependencies expected in your app:
@@ -64,7 +64,7 @@ Peer dependencies expected in your app:
 
 ```ts
 import { AnchorProvider } from "@coral-xyz/anchor";
-import { SubscriptionSdk } from "@solana-subscription/sdk";
+import { SubscriptionSdk } from "@recuro/sdk";
 
 const provider = new AnchorProvider(connection, wallet, {
   commitment: "confirmed",

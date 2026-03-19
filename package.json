@@ -1,5 +1,5 @@
 {
-  "name": "@solana-subscription/sdk",
+  "name": "@recuro/sdk",
   "version": "1.0.0",
   "description": "Non-custodial recurring USDC subscription SDK for Solana",
   "main": "dist/index.js",
