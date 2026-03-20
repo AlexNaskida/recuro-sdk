@@ -57,8 +57,14 @@ export class SubscriptionSdk {
     this.usdcMint = config.usdcMint
       ? new PublicKey(config.usdcMint)
       : USDC_MINT[this.cluster];
-    this.program = new Program(IDL as unknown as Idl, provider) as any;
-    // this.program = new Program(IDL as unknown as Idl, this.programId, provider);
+    const idlWithAddress = {
+      ...(IDL as Record<string, unknown>),
+      address: this.programId.toBase58(),
+    };
+    this.program = new Program(
+      idlWithAddress as unknown as Idl,
+      provider,
+    ) as any;
   }
 
   // ──────────────────────────────────────────────────────────
