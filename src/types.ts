@@ -3,7 +3,7 @@ import type BN from "bn.js";
 
 export type Cluster = "devnet" | "mainnet-beta" | "localnet";
 
-// ── On-chain account shapes ───────────────────────────────────────────────────
+// ── On-chain account shapes ──────────────────────────────────────────────────
 export interface PlanAccount {
   publicKey: PublicKey;
   merchant: PublicKey;
