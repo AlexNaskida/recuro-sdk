@@ -4,9 +4,6 @@ export const PROGRAM_ID = new PublicKey(
   "45WGwEH24Y9J6ZHYoKiGRET4t4xpu6ESiTeRdhRf9pfr",
 );
 
-// export const CLOCKWORK_THREAD_PROGRAM_ID = new PublicKey(
-//   "CLoCKi11111111111111111111111111111111111111",
-// );
 export const CLOCKWORK_THREAD_PROGRAM_ID = SystemProgram.programId; // unused placeholder
 
 /** USDC mint addresses */
