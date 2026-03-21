@@ -1,7 +1,7 @@
 {
   "name": "@recuro/sdk",
-  "version": "1.0.0",
-  "description": "Non-custodial recurring USDC subscription SDK for Solana",
+  "version": "0.1.2",
+  "description": "Non-custodial recurring USDC subscriptions on Solana",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -13,7 +13,8 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "src"
   ],
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts --clean",
@@ -29,9 +30,21 @@
     "anchor",
     "defi",
     "payments",
-    "recurring"
+    "recurring",
+    "recuro"
   ],
   "license": "MIT",
+  "homepage": "https://github.com/AlexNaskida/recuro-sdk",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AlexNaskida/recuro-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/AlexNaskida/recuro-sdk/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "peerDependencies": {
     "@coral-xyz/anchor": "^0.32.0",
     "@solana/spl-token": "^0.4.14",
