@@ -1,19 +1,23 @@
 # Fetch Methods
 
-Retrieve plan and subscription data from the blockchain.
+Retrieve plan and subscription data for subscriber-facing integrations.
 
 ## fetchPlan()
 
 Get a single plan by address.
 
 ```typescript
-async fetchPlan(planPubkey: PublicKey): Promise<PlanAccount>
+async fetchPlan(planPubkey: PublicKey): Promise<PlanAccount | null>
 ```
 
 **Example:**
 
 ```typescript
 const plan = await sdk.fetchPlan(new PublicKey("..."));
+
+if (!plan) {
+  throw new Error("Plan not found");
+}
 
 console.log({
   name: plan.name,
@@ -30,13 +34,19 @@ console.log({
 Get a single subscription by address.
 
 ```typescript
-async fetchSubscription(subscriptionPubkey: PublicKey): Promise<SubscriptionAccount>
+async fetchSubscription(
+  subscriptionPubkey: PublicKey,
+): Promise<SubscriptionAccount | null>
 ```
 
 **Example:**
 
 ```typescript
 const subscription = await sdk.fetchSubscription(new PublicKey("..."));
+
+if (!subscription) {
+  throw new Error("Subscription not found");
+}
 
 console.log({
   plan: subscription.plan.toBase58(),
@@ -51,7 +61,7 @@ console.log({
 
 ## fetchMerchantPlans()
 
-Get all plans created by a merchant.
+Get plans created by a merchant so subscribers can discover available options.
 
 ```typescript
 async fetchMerchantPlans(merchantPublicKey: PublicKey): Promise<PlanAccount[]>
@@ -86,6 +96,7 @@ const subscriptions = await sdk.fetchSubscriberSubscriptions(userPublicKey);
 
 subscriptions.forEach((sub) => {
   const plan = await sdk.fetchPlan(sub.plan);
+  if (!plan) return;
   console.log({
     planName: plan.name,
     status: sub.status,
@@ -93,28 +104,6 @@ subscriptions.forEach((sub) => {
     amountUsdc: sub.amountUsdc.toNumber() / 1e6,
   });
 });
-```
-
-## fetchMerchantPlanSubscriptions()
-
-Get all subscribers to a specific plan.
-
-```typescript
-async fetchMerchantPlanSubscriptions(planPubkey: PublicKey): Promise<SubscriptionAccount[]>
-```
-
-**Example:**
-
-```typescript
-const subscribers = await sdk.fetchMerchantPlanSubscriptions(planPubkey);
-
-console.log(`Total subscribers: ${subscribers.length}`);
-console.log(
-  `Active: ${subscribers.filter((s) => s.status === "Active").length}`,
-);
-console.log(
-  `Cancelled: ${subscribers.filter((s) => s.status === "Cancelled").length}`,
-);
 ```
 
 ## Data types

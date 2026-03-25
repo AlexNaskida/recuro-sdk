@@ -6,17 +6,18 @@
 ## Getting Started
 
 - [Quick Start](getting-started/quick-start.md)
-- [How it works](getting-started/how-it-works.md)
+- [How it Works](getting-started/how-it-works.md)
 - [Integration Guide](getting-started/integration-guide.md)
 
-## SDK Reference
+## Subscription SDK Reference
 
-- [createPlan](sdk-reference/create-plan.md)
-- [createSubscription](sdk-reference/create-subscription.md)
-- [cancelSubscription](sdk-reference/cancel-subscription.md)
-- [renewSubscription](sdk-reference/renew-subscription.md)
-- [Fetch Methods](sdk-reference/fetch-methods.md)
-- [Event Listeners](sdk-reference/event-listeners.md)
+- [Subscribe to a Plan](sdk-reference/create-subscription.md)
+- [View Your Subscriptions](sdk-reference/fetch-methods.md)
+- [Pause a Subscription](sdk-reference/pause-subscription.md)
+- [Resume a Subscription](sdk-reference/resume-subscription.md)
+- [Cancel a Subscription](sdk-reference/cancel-subscription.md)
+- [Renew a Subscription](sdk-reference/renew-subscription.md)
+- [Real-time Events](sdk-reference/event-listeners.md)
 
 ## Keeper
 

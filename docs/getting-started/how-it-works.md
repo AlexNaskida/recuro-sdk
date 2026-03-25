@@ -1,62 +1,112 @@
-# How it Works
+# How It Works
 
-## Architecture overview
+## Subscriber Journey
 
-| Traditional SaaS          | Recuro                                        |
-| ------------------------- | --------------------------------------------- |
-| Merchant holds your card  | Funds stay in your wallet                     |
-| Cancel requires merchant  | Cancel revokes on-chain instantly             |
-| Price can change any time | Price locked at subscribe time                |
-| Single point of failure   | Any keeper can process payments - no downtime |
-| Single point of failure   | Any keeper can process payments               |
+| Step             | What Happens                               | Your Control |
+| ---------------- | ------------------------------------------ | ------------ |
+| 1. Discover Plan | Browse available plans from a merchant     | You choose   |
+| 2. Subscribe     | Approve SPL delegate in Phantom (one-time) | You sign     |
+| 3. Trial Period  | Free access (if plan includes trial)       | Automatic    |
+| 4. First Payment | Keeper executes automatic payment on-chain | Automatic    |
+| 5. Recurring     | Payment repeats every X days               | Automatic    |
+| 6. Manage        | Pause, Resume, or Cancel anytime           | You control  |
+| 7. Cancel        | Delegate revoked, zero future exposure     | One click    |
 
-## What happens when a subscriber subscribes
+## What the SPL delegate approval means
 
-1. **Merchant creates a plan** with fixed price, interval, and trial period.
-   - Price is **immutable** in the Plan PDA.
-   - Cannot be changed without a new plan.
+When you subscribe, Phantom shows:
 
-2. **Subscriber approves SPL delegate**.
-   - Solves: "Did you sign this? I don't remember."
-   - Limited to plan amount per cycle (e.g., 9.99 USDC for 30 days).
-   - Can be revoked from any Phantom wallet at any time = instant opt-out.
+```
+⚠️ Request to Approve Token Delegate
 
-3. **Subscription PDA is created** linking Plan + Subscriber + amounts + next payment time.
-   - Trial period delay is respected (payment_time = now + trial_seconds).
-   - Once created, only the subscriber can cancel; merchant cannot force expiry.
+Recuro Subscription Program requests permission to transfer from your
+account.
 
-4. **Keeper detects new subscription** and waits for next payment time.
-   - Any keeper can execute, or multiple keepers for redundancy.
-   - Gas is paid by keeper; rewards come from protocol treasury.
+Token: USDC
+Delegate: [Subscription PDA]
+Amount: 9.99
+Authorized signer: [Your wallet]
 
-5. **Keeper calls `execute_payment()`** after next_payment_time.
-   - Checks Plan PDA for amount (immutable).
-   - Checks delegate approval on subscriber's token account.
-   - Transfers USDC: subscriber → merchant.
-   - On-chain, atomically enforced. Can never transfer wrong amount.
+[Approve] [Reject]
+```
 
-6. **Payment succeeds or fails**.
-   - **Success**: next_payment_time += interval_seconds
-   - **Failure** (low balance, revoked delegate, etc.): failure counter increments
-   - **3 failures in a row**: Subscription auto-expires, subscriber rent returned
+### Why it's safe
 
-## Why the SPL delegate is safe
+- **Limited to plan amount** — Delegate cannot transfer more than the plan price per cycle
+- **Bounded exposure** — If compromised, max loss is one billing cycle
+- **Revokable anytime** — You can revoke it from Phantom instantly
+- **One approval, all payments** — No re-approval needed each month
 
-The SPL token program allows "delegate approval"-each source account can approve one delegated signer to transfer up to an amount. Recuro uses this instead of giving the program direct custody.
+## Payment execution
 
-- **Subscriber keeps control**: Can revoke the delegate from Phantom in one click.
-- **Bounded exposure**: Delegate is limited to plan amount per cycle, not total balance.
-- **No private keys**: Merchant never holds subscriber keys; keeper doesn't either.
-- **Composable**: Subscriber can still use their wallet for other transactions.
+1. **Keeper monitors** your subscription on-chain
+2. **Waits for next_payment_time** (respects trial period)
+3. **Checks conditions**:
+   - Does delegate approval exist?
+   - Is USDC balance sufficient?
+   - Is three consecutive failures NOT reached?
+4. **Executes transfer** if all conditions pass:
+   - Reads plan amount (locked, cannot change)
+   - Transfers USDC from your wallet to merchant
+   - Updates next_payment_time += interval
+5. **On failure**:
+   - Low balance? Increments failure counter
+   - Delegate revoked? Increments failure counter
+   - 3 failures in a row? Subscription auto-expires, rent returned
+
+## Your subscription lifecycle
+
+### Active
+
+- Payments execute on schedule
+- Trial period (if any) reduces next payment time
+- **Actions**: Pause, Resume, Cancel
+
+### Paused
+
+- Payments stop temporarily
+- Delegate approval remains active
+- **Actions**: Resume (continue from where it left off), Cancel
+
+### Cancelled
+
+- Subscription is terminated
+- **Delegate is immediately revoked** — No future payments possible
+- **Irreversible** — Must subscribe again to restart
+- Rent may be returned to your wallet
+
+### Expired
+
+- After 12 billing cycles without renewal
+- Delegate approval has expired
+- **Actions**: Renew (re-approve delegate for 12 more cycles)
 
 ## Why the keeper model works
 
-The keeper is **stateless**-it just polls subscriptions and calls an on-chain instruction. No database, no private keys, no magic.
+The keeper is **stateless**—it's just a process that:
 
-- Any keeper can run it (open source).
-- Multiple keepers can coexist without collision (last one wins; payment is idempotent by next_payment_time check).
-- If a keeper goes down, another picks up the slack with no downtime.
-- Rewards are funded by protocol treasury, not deducted from subscribers.
+- Polls subscriptions on-chain
+- Checks if next_payment_time has arrived
+- Calls `executePayment()` instruction
+- Repeats forever
+
+**Key advantages:**
+
+- Any keeper can do this (no centralization)
+- Multiple keepers can coexist without conflict
+- If one keeper goes down, others continue
+- Rewards funded by protocol, not deducted from you
+- You benefit from redundancy
+
+## Fund safety guarantees
+
+| What Could Happen         | Your Protection                                                |
+| ------------------------- | -------------------------------------------------------------- |
+| Merchant gets hacked      | Funds never in merchant wallet until transfer                  |
+| Keeper gets hacked        | Keeper can't change amounts or direction—all enforced on-chain |
+| Delegate compromised      | Only plan amount per cycle, not your full balance              |
+| Delegate approval revoked | You can revoke anytime; zero future exposure                   |
+| USDC token bug            | Not Recuro's responsibility; same as any USDC holder           |
 
 ---
 

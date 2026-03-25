@@ -4,7 +4,7 @@ Cancel a subscription and prevent future payments.
 
 ## Overview
 
-Cancels an active or paused subscription. Once cancelled, no further payments will be charged. SPL delegate approval remains in place (subscriber can manually revoke in Phantom), but Keeper will skip this subscription on future execution cycles.
+Cancels an active or paused subscription. Once cancelled, no further payments will be charged. Delegate approval is revoked immediately and Keeper skips this subscription on future execution cycles.
 
 ## Parameters
 
@@ -15,15 +15,13 @@ Cancels an active or paused subscription. Once cancelled, no further payments wi
 ## Returns
 
 ```typescript
-interface TxResult {
-  signature: string; // Transaction signature
-}
+Promise<string>; // Transaction signature
 ```
 
 ## Example
 
 ```typescript
-const { signature } = await sdk.cancelSubscription(subscriptionPubkey);
+const signature = await sdk.cancelSubscription(subscriptionPubkey);
 console.log("Cancelled:", signature);
 ```
 
@@ -37,18 +35,8 @@ console.log("Cancelled:", signature);
 
 1. Subscription status changes from `Active` to `Cancelled`.
 2. Keeper stops executing payments.
-3. SPL delegate remains (must be manually revoked to remove approval).
+3. SPL delegate is revoked immediately.
 4. Subscriber can resubscribe to the same plan anytime.
-
-## Revoking the delegate (optional)
-
-After cancellation, the subscriber should revoke the SPL delegate approval in Phantom to fully disconnect:
-
-1. Open Phantom → Settings → Approve & Connect
-2. Find "Recuro Subscription Program"
-3. Click "Revoke"
-
-Cancelling the subscription is sufficient to stop future charges, but revoking the delegate ensures zero approval remains.
 
 ## Auto-expiry (different from cancellation)
 

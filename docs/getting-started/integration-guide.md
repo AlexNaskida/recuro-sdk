@@ -1,6 +1,6 @@
 # Integration Guide
 
-Full 8-step walkthrough to integrate Recuro subscriptions into your app.
+Complete walkthrough to integrate Recuro subscription management into your app.
 
 ## Step 1: Install and initialize SDK
 
@@ -17,60 +17,53 @@ const provider = new AnchorProvider(connection, wallet, {
 const sdk = new SubscriptionSdk(provider, { cluster: "devnet" });
 ```
 
-## Step 2: Create a plan (merchant backend)
+## Step 2: Load plans from a merchant
 
 ```typescript
-// Call this once, store the planPubkey for later
-const { planPubkey } = await sdk.createPlan({
-  planId: 1, // or Date.now() for unique plans
-  name: "Pro Plan",
-  description: "Unlimited access + priority support",
-  amountUsdc: 29.99,
-  intervalDays: 30,
-  trialDays: 7,
-  maxSubscribers: 1000,
-});
+import { PublicKey } from "@solana/web3.js";
 
-console.log("Plan created:", planPubkey.toBase58());
-// Save this to your database
+const merchantWallet = new PublicKey("merchant_wallet_here");
+const plans = await sdk.fetchMerchantPlans(merchantWallet);
+const activePlans = plans.filter((p) => p.status === "Active");
+
+activePlans.forEach((plan) => {
+  console.log({
+    planPubkey: plan.publicKey.toBase58(),
+    name: plan.name,
+    amountUsdc: plan.amountUsdc.toNumber() / 1e6,
+    intervalDays: plan.intervalSeconds.toNumber() / 86_400,
+  });
+});
 ```
 
-## Step 3: Add subscribe button to frontend (React example)
+## Step 3: Subscribe from frontend (React example)
 
 ```typescript
-import { useWallet } from "@solana/wallet-adapter-react";
-import { AnchorProvider } from "@coral-xyz/anchor";
-import { SubscriptionSdk } from "@recuro/sdk";
-import { Connection, clusterApiUrl } from "@solana/web3.js";
+import { useState } from "react";
+import { PublicKey } from "@solana/web3.js";
+import type { SubscriptionSdk } from "@recuro/sdk";
 
-export function SubscribeButton({ planPubkey }: { planPubkey: string }) {
-  const wallet = useWallet();
+export function SubscribeButton({
+  planPubkey,
+  sdk,
+}: {
+  planPubkey: string;
+  sdk: SubscriptionSdk;
+}) {
   const [loading, setLoading] = useState(false);
 
   const handleSubscribe = async () => {
-    if (!wallet.publicKey) {
-      alert("Connect wallet first");
-      return;
-    }
-
     setLoading(true);
     try {
-      const connection = new Connection(clusterApiUrl("devnet"));
-      const provider = new AnchorProvider(connection, wallet as any, {
-        commitment: "confirmed",
-      });
-      const sdk = new SubscriptionSdk(provider, { cluster: "devnet" });
-
       const { subscriptionPubkey, signature } = await sdk.createSubscription({
         planPubkey: new PublicKey(planPubkey),
       });
 
       console.log("Subscription created:", subscriptionPubkey.toBase58());
       console.log("Tx:", signature);
-      alert("Subscribed! Check your wallet for approval prompt.");
     } catch (error) {
       console.error("Subscribe failed:", error);
-      alert(`Error: ${(error as any).message}`);
+      alert(`Error: ${(error as Error).message}`);
     } finally {
       setLoading(false);
     }
@@ -78,142 +71,76 @@ export function SubscribeButton({ planPubkey }: { planPubkey: string }) {
 
   return (
     <button onClick={handleSubscribe} disabled={loading}>
-      {loading ? "Processing..." : "Subscribe Now"}
+      {loading ? "Processing..." : "Subscribe"}
     </button>
   );
 }
 ```
 
-## Step 4: Show subscription status to users
+## Step 4: Show user subscriptions
 
 ```typescript
-// Fetch all active subscriptions for the current user
 const subscriptions = await sdk.fetchSubscriberSubscriptions(wallet.publicKey);
 
-subscriptions.forEach((sub) => {
+for (const sub of subscriptions) {
+  const plan = await sdk.fetchPlan(sub.plan);
   console.log({
-    plan: sub.plan.toBase58(),
-    status: sub.status, // "Active" | "Paused" | "Cancelled" | "Expired"
+    planName: plan?.name ?? "Unknown Plan",
+    status: sub.status,
+    amountUsdc: sub.amountUsdc.toNumber() / 1e6,
     nextPaymentAt: new Date(sub.nextPaymentAt.toNumber() * 1000),
-    totalPaid: sub.totalPaid.toNumber() / 1e6, // Convert to human USDC
+    totalPaid: sub.totalPaid.toNumber() / 1e6,
+  });
+}
+```
+
+## Step 5: Manage subscription lifecycle
+
+```typescript
+// Pause temporary
+await sdk.pauseSubscription(subscriptionPubkey);
+
+// Resume later
+await sdk.resumeSubscription(subscriptionPubkey);
+
+// Cancel permanently
+await sdk.cancelSubscription(subscriptionPubkey);
+
+// Renew expired subscription
+await sdk.renewSubscription(subscriptionPubkey, planPubkey);
+```
+
+## Step 6: Optional real-time updates
+
+```typescript
+const paymentListenerId = sdk.onPaymentExecuted((event, slot, signature) => {
+  console.log("Payment executed", {
+    subscription: event.subscription.toBase58(),
+    signature,
+    slot,
   });
 });
 
-// Render a dashboard showing:
-// - Plan name
-// - Amount and frequency
-// - Next payment date
-// - Total amount paid to date
-// - "Cancel" button
-```
-
-## Step 5: Handle cancellation
-
-```typescript
-const handleCancel = async () => {
-  const { signature } = await sdk.cancelSubscription(subscriptionPubkey);
-  console.log("Cancelled:", signature);
-
-  // On subscriber's wallet: Show confirmation
-  // "Your subscription has been cancelled. No more payments will be charged."
-};
-```
-
-## Step 6: Handle renewal (expired subscriptions)
-
-```typescript
-// Subscribers see expired subscription in their list
-// Show a "Resubscribe" button
-
-const handleResubscribe = async () => {
-  // Create a new subscription (same plan or updated plan)
-  const { subscriptionPubkey } = await sdk.createSubscription({
-    planPubkey: new PublicKey(planPubkey),
-  });
-  console.log("Resubscribed:", subscriptionPubkey.toBase58());
-};
-```
-
-## Step 7: Listen to payment events
-
-```typescript
-// Set up listener for payment execution
-const listenerId = sdk.onPaymentExecuted((event, slot, signature) => {
-  console.log({
-    grossAmount: event.grossAmount.toNumber() / 1e6,
-    feesCharged: event.feesCharged.toNumber() / 1e6,
-    netAmount: event.netAmount.toNumber() / 1e6,
+const failedListenerId = sdk.onPaymentFailed((event, slot, signature) => {
+  console.log("Payment failed", {
+    subscription: event.subscription.toBase58(),
+    reason: event.reason,
     signature,
   });
-
-  // Update your database: record the payment
-  // Send customer receipt email
-  // Update dashboard analytics
 });
 
-// Clean up when component unmounts
-return () => {
-  sdk.removeEventListener(listenerId);
-};
+// cleanup when component unmounts
+void sdk.removeEventListener(paymentListenerId);
+void sdk.removeEventListener(failedListenerId);
 ```
 
-## Step 8: Run the keeper on your server
+## Production checklist
 
-The keeper automatically executes scheduled payments. See [**Keeper Setup**](../keeper/running-your-own.md).
-
-```bash
-# Environment variables
-SOLANA_CLUSTER=devnet
-SOLANA_RPC=https://api.devnet.solana.com
-KEEPER_KEYPAIR_PATH=/path/to/keypair.json
-POLL_INTERVAL_MS=30000
-
-# Run the keeper
-node keeper.mjs
-```
-
----
-
-## Common patterns
-
-### Merchant dashboard
-
-Pull analytics for all your plans:
-
-```typescript
-const analytics = await sdk.getAnalytics(merchant.publicKey);
-
-console.log({
-  totalRevenue: analytics.totalRevenue,
-  mrr: analytics.monthlyRecurringRevenue,
-  activeSubscriptions: analytics.activeSubscriptions,
-});
-```
-
-### Subscriber portal
-
-Show status and history:
-
-```typescript
-const subs = await sdk.fetchSubscriberSubscriptions(subscriber.publicKey);
-const plans = await Promise.all(subs.map((sub) => sdk.fetchPlan(sub.plan)));
-
-// Display:
-// Plan name, amount, last payment, next payment, etc.
-```
-
-### Webhook simulation
-
-Listen to on-chain events and update your server:
-
-```typescript
-sdk.onPaymentExecuted((event, slot) => {
-  fetch("/api/payment-webhook", {
-    method: "POST",
-    body: JSON.stringify({ event, slot }),
-  });
-});
-```
+- Validate wallet is connected before every action
+- Show clear errors for rejected wallet signatures
+- Refresh subscription list after pause/resume/cancel/renew
+- Cache plan metadata to avoid repeated RPC calls
+- Use a dedicated RPC endpoint for stable production traffic
 
 ---
 

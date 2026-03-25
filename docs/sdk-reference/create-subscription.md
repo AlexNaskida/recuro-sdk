@@ -8,9 +8,9 @@ Creates a Subscription PDA linking a subscriber to a plan. Triggers a Phantom ap
 
 ## Parameters
 
-| Parameter    | Type      | Required | Description                                    |
-| ------------ | --------- | -------- | ---------------------------------------------- |
-| `planPubkey` | PublicKey | ✓        | Address of the Plan PDA (from `createPlan()`). |
+| Parameter    | Type      | Required | Description                                       |
+| ------------ | --------- | -------- | ------------------------------------------------- |
+| `planPubkey` | PublicKey | ✓        | Address of an existing plan provided by merchant. |
 
 ## Returns
 

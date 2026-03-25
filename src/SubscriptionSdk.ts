@@ -72,9 +72,47 @@ export class SubscriptionSdk {
   // ──────────────────────────────────────────────────────────
 
   /**
-   * Deploy a new Plan PDA on-chain.
-   * The plan defines price, billing interval, trial period, and capacity.
-   * Price is immutable after deployment to protect subscribers.
+   * Create a new subscription plan. (Merchant only)
+   *
+   * Deploys a plan PDA that subscribers can join. The plan defines the
+   * price, billing interval, trial period, and capacity.
+   *
+   * **Critical constraint:** Price is IMMUTABLE after creation to protect
+   * subscribers from surprise increases. Choose carefully.
+   *
+   * **Constraints:**
+   * - amountUsdc: $0.01 to $100,000 per cycle
+   * - intervalDays: 1 to 365 days
+   * - planId: Unique per merchant (used in PDA seeds)
+   * - name: Max 64 characters
+   *
+   * **After creation:**
+   * - Plan status is "Active" and ready for subscriptions
+   * - Merchant can update name, description, capacity, receive address
+   * - Merchant cannot change price or interval
+   * - Merchant can archive to stop new signups
+   *
+   * See PLAN_MANAGEMENT.md for complete merchant API.
+   *
+   * @param params - Plan parameters
+   * @returns Plan address and transaction signature
+   * @throws "Plan name is required" if name is empty
+   * @throws "Plan name must be ≤ 64 characters" if name too long
+   * @throws "Amount must be between $0.01 and $100,000" if invalid
+   * @throws "Interval must be between 1 and 365 days" if invalid
+   *
+   * @deprecated For subscription-only integrations, ignore this method
+   *
+   * @example
+   * ```typescript
+   * const { planPubkey } = await sdk.createPlan({
+   *   planId: 1,
+   *   name: "Professional",
+   *   amountUsdc: 99.99,
+   *   intervalDays: 30,
+   *   trialDays: 7,
+   * });
+   * ```
    */
   async createPlan(params: CreatePlanParams): Promise<CreatePlanResult> {
     this.validateCreatePlanParams(params);
@@ -118,8 +156,25 @@ export class SubscriptionSdk {
   }
 
   /**
-   * Update mutable plan fields: name, description, maxSubscribers, merchantReceiveAddress.
-   * Price and interval cannot be changed after creation.
+   * Update mutable plan fields. (Merchant only)
+   *
+   * Change plan name, description, capacity, or merchant receive address.
+   *
+   * **Cannot change:**
+   * - Price (amountUsdc)
+   * - Billing interval (intervalSeconds)
+   * - Trial period (trialSeconds)
+   *
+   * These are locked to protect existing subscribers.
+   *
+   * See PLAN_MANAGEMENT.md for complete merchant API.
+   *
+   * @param params - Update parameters
+   * @returns Transaction signature
+   * @throws "Plan not found" if planPubkey is invalid
+   * @throws Error if caller is not the merchant
+   *
+   * @deprecated For subscription-only integrations, ignore this method
    */
   async updatePlan(params: UpdatePlanParams): Promise<TransactionSignature> {
     const merchant = this.provider.wallet.publicKey;
@@ -143,7 +198,22 @@ export class SubscriptionSdk {
       .rpc({ commitment: this.provider.opts.commitment });
   }
 
-  /** Archive a plan — stops new subscriptions; existing continue. */
+  /**
+   * Archive a plan. (Merchant only)
+   *
+   * Stops accepting new subscriptions while preserving existing ones.
+   * Existing subscribers continue to be charged automatically.
+   * Useful for retiring old plans.
+   *
+   * See PLAN_MANAGEMENT.md for complete merchant API.
+   *
+   * @param planPubkey - Plan to archive
+   * @returns Transaction signature
+   * @throws "Plan not found" if planPubkey is invalid
+   * @throws Error if caller is not the merchant
+   *
+   * @deprecated For subscription-only integrations, ignore this method
+   */
   async archivePlan(planPubkey: PublicKey): Promise<TransactionSignature> {
     const merchant = this.provider.wallet.publicKey;
     return this.program.methods
@@ -161,14 +231,42 @@ export class SubscriptionSdk {
   // ──────────────────────────────────────────────────────────
 
   /**
-   * Subscribe to a plan.
+   * Subscribe to a plan as a subscriber.
    *
-   * This instruction:
-   *  1. Verifies the plan is Active with available capacity
-   *  2. Creates a Subscription PDA (amount copied from Plan — no spoofing)
-   *  3. Approves the Subscription PDA as SPL delegate for 12 billing cycles
+   * This creates a subscription account and approves a limited SPL delegate
+   * that allows automated payments. The subscriber signs once; all future
+   * payments happen automatically on-chain without additional approvals.
    *
-   * The subscriber signs once. All future payments are automatic.
+   * **What happens:**
+   * 1. Verifies the plan is Active with available capacity
+   * 2. Creates a Subscription PDA (amount locked to plan price—no spoofing)
+   * 3. Approves the Subscription PDA as SPL delegate for up to 12 billing cycles
+   * 4. First payment scheduled 1 cycle from now (or after trial if applicable)
+   *
+   * **Subscriber must have:**
+   * - Sufficient USDC to cover first payment (or trial period must be active)
+   * - SOL for transaction fees (~0.005 SOL)
+   *
+   * **Security:**
+   * - Funds stay in subscriber's wallet until payment executes
+   * - Delegate can only transfer plan's locked amount, only to merchant
+   * - Cancel anytime to immediately revoke delegate
+   *
+   * @param params - Subscription parameters
+   * @param params.planPubkey - PublicKey of the plan to subscribe to
+   * @returns Promise with subscription address and transaction signature
+   *
+   * @throws "Plan not found" if plan doesn't exist
+   * @throws "Plan is not accepting new subscribers" if paused/archived
+   * @throws Error if wallet lacks sufficient USDC or SOL
+   *
+   * @example
+   * ```typescript
+   * const { subscriptionPubkey, signature } = await sdk.createSubscription({
+   *   planPubkey: new PublicKey("..."),
+   * });
+   * console.log(`Subscribed! TX: ${signature}`);
+   * ```
    */
   async createSubscription(
     params: CreateSubscriptionParams,
@@ -209,7 +307,37 @@ export class SubscriptionSdk {
     return { signature, subscriptionPubkey };
   }
 
-  /** Pause an active subscription (subscriber or merchant). */
+  /**
+   * Pause an active subscription temporarily.
+   *
+   * Stops scheduled payments without cancelling. The delegate approval
+   * remains active and can be resumed at any time. Useful for users
+   * who want to take a break but plan to re-enable later.
+   *
+   * **Effects:**
+   * - Subscription status becomes "Paused"
+   * - Keeper stops attempting payments
+   * - Delegate remains approved (no signature needed to resume)
+   * - Trial period pauses as well
+   *
+   * **Who can pause:**
+   * - The subscriber (original signer)
+   * - The merchant (plan creator)
+   *
+   * **To resume:** Call `resumeSubscription()` with same address
+   *
+   * @param subscriptionPubkey - Address of subscription to pause
+   * @returns Transaction signature
+   *
+   * @throws "Subscription not found" if address is invalid
+   * @throws Error if caller is unauthorized
+   *
+   * @example
+   * ```typescript
+   * const signature = await sdk.pauseSubscription(subscriptionPubkey);
+   * console.log(`Paused: ${signature}`);
+   * ```
+   */
   async pauseSubscription(
     subscriptionPubkey: PublicKey,
   ): Promise<TransactionSignature> {
@@ -225,7 +353,35 @@ export class SubscriptionSdk {
       .rpc({ commitment: this.provider.opts.commitment });
   }
 
-  /** Resume a paused subscription (subscriber or merchant). */
+  /**
+   * Resume a paused subscription.
+   *
+   * Re-activates a paused subscription where it left off. The delegate
+   * remains active, so no new approval is needed. Next payment time is
+   * recalculated.
+   *
+   * **Effects:**
+   * - Subscription status becomes "Active"
+   * - Keeper resumes attempting payments on schedule
+   * - Next payment time recalculated
+   * - Delegate approval remains valid
+   *
+   * **Who can resume:**
+   * - The subscriber (original signer)
+   * - The merchant (plan creator)
+   *
+   * @param subscriptionPubkey - Address of subscription to resume
+   * @returns Transaction signature
+   *
+   * @throws "Subscription not found" if address is invalid
+   * @throws "Subscription is not paused" if already active
+   *
+   * @example
+   * ```typescript
+   * const signature = await sdk.resumeSubscription(subscriptionPubkey);
+   * console.log(`Resumed: ${signature}`);
+   * ```
+   */
   async resumeSubscription(
     subscriptionPubkey: PublicKey,
   ): Promise<TransactionSignature> {
@@ -241,7 +397,42 @@ export class SubscriptionSdk {
       .rpc({ commitment: this.provider.opts.commitment });
   }
 
-  /** Renew an expired subscription. Re-approves delegate for 12 new cycles. */
+  /**
+   * Renew an expired subscription.
+   *
+   * After 12 billing cycles, the SPL delegate expires and the subscription
+   * enters "Expired" status. Call this to re-approve the delegate for
+   * another 12 cycles and resume payments.
+   *
+   * **When renewal is needed:**
+   * - Subscription status is "Expired"
+   * - Keeper has stopped attempting payments
+   * - Delegate no longer has authority to transfer
+   *
+   * **Effects:**
+   * - Re-approves SPL delegate for 12 new cycles
+   * - Subscription status returns to "Active"
+   * - Next payment time recalculated
+   *
+   * **Who can renew:**
+   * - Only the subscriber (original signer)
+   *
+   * @param subscriptionPubkey - Address of expired subscription
+   * @param planPubkey - Address of the plan
+   * @returns Transaction signature and subscription address
+   *
+   * @throws "Subscription not found" if address is invalid
+   * @throws Error if subscriber lacks sufficient USDC
+   *
+   * @example
+   * ```typescript
+   * const { signature } = await sdk.renewSubscription(
+   *   subscriptionPubkey,
+   *   planPubkey
+   * );
+   * console.log(`Renewed: ${signature}`);
+   * ```
+   */
   async renewSubscription(
     subscriptionPubkey: PublicKey,
     planPubkey: PublicKey,
@@ -267,7 +458,41 @@ export class SubscriptionSdk {
     return { signature, subscriptionPubkey };
   }
 
-  /** Cancel a subscription (subscriber or merchant). Irreversible. */
+  /**
+   * Cancel a subscription permanently.
+   *
+   * **This is irreversible.** Immediately revokes the SPL delegate and
+   * stops all future payments. No way to undo—user will need to subscribe
+   * to the plan again to restart.
+   *
+   * **Effects:**
+   * - Subscription status becomes "Cancelled"
+   * - SPL delegate is immediately revoked
+   * - Zero future payment exposure
+   * - Keeper stops attempting payments
+   * - Cannot be resumed; must subscribe again
+   *
+   * **Who can cancel:**
+   * - The subscriber (original signer)
+   * - The merchant (plan creator) — useful if customer disputes charge
+   *
+   * **Security guarantee:**
+   * - Even if keeper is compromised, no payments can execute after cancel
+   * - Even if merchant is compromised, subscriber can cancel immediately
+   *
+   * @param subscriptionPubkey - Address of subscription to cancel
+   * @returns Transaction signature
+   *
+   * @throws "Subscription not found" if address is invalid
+   * @throws Error if caller is unauthorized
+   *
+   * @example
+   * ```typescript
+   * const signature = await sdk.cancelSubscription(subscriptionPubkey);
+   * console.log(`Cancelled: ${signature}`);
+   * console.log(`Delegate revoked. No future payments.`);
+   * ```
+   */
   async cancelSubscription(
     subscriptionPubkey: PublicKey,
   ): Promise<TransactionSignature> {
@@ -287,6 +512,25 @@ export class SubscriptionSdk {
   // FETCH / READ helpers
   // ──────────────────────────────────────────────────────────
 
+  /**
+   * Fetch a plan by its public key.
+   *
+   * Retrieves plan details including price, interval, trial period, and
+   * subscription stats. Returns null if plan doesn't exist.
+   *
+   * @param planPubkey - Address of the plan
+   * @returns Plan account data, or null if not found
+   *
+   * @example
+   * ```typescript
+   * const plan = await sdk.fetchPlan(planAddress);
+   * if (!plan) {
+   *   console.error("Plan not found");
+   * } else {
+   *   console.log(`${plan.name}: $${plan.amountUsdc / 1e6} USDC`);
+   * }
+   * ```
+   */
   async fetchPlan(planPubkey: PublicKey): Promise<PlanAccount | null> {
     try {
       const raw = await this.program.account.plan.fetch(planPubkey);
@@ -296,6 +540,27 @@ export class SubscriptionSdk {
     }
   }
 
+  /**
+   * Fetch a subscription by its public key.
+   *
+   * Retrieves subscription details including plan reference, status,
+   * next payment time, and payment history. Returns null if subscription
+   * doesn't exist.
+   *
+   * @param subscriptionPubkey - Address of the subscription
+   * @returns Subscription account data, or null if not found
+   *
+   * @example
+   * ```typescript
+   * const sub = await sdk.fetchSubscription(subscriptionAddress);
+   * if (!sub) {
+   *   console.error("Subscription not found");
+   * } else {
+   *   console.log(`Status: ${sub.status}`);
+   *   console.log(`Next payment: ${new Date(sub.nextPaymentAt.toNumber() * 1000)}`);
+   * }
+   * ```
+   */
   async fetchSubscription(
     subscriptionPubkey: PublicKey,
   ): Promise<SubscriptionAccount | null> {
@@ -308,7 +573,23 @@ export class SubscriptionSdk {
     }
   }
 
-  /** Fetch all plans owned by a merchant wallet. */
+  /**
+   * Fetch all plans created by a merchant.
+   *
+   * Retrieves all active and archived plans for a merchant wallet.
+   * Useful for displaying available subscription options in a UI.
+   *
+   * @param merchant - Merchant wallet address
+   * @returns Array of plan accounts
+   *
+   * @example
+   * ```typescript
+   * const merchantPlans = await sdk.fetchMerchantPlans(
+   *   new PublicKey("merchant_address")
+   * );
+   * console.log(`Merchant has ${merchantPlans.length} plans`);
+   * ```
+   */
   async fetchMerchantPlans(merchant: PublicKey): Promise<PlanAccount[]> {
     try {
       const accounts = await this.program.account.plan.all([
@@ -341,7 +622,19 @@ export class SubscriptionSdk {
     }
   }
 
-  /** Fetch all subscriptions for a specific plan. */
+  /**
+   * Fetch all subscriptions for a specific plan. (Analytics)
+   *
+   * Retrieves all active and inactive subscriptions belonging to a plan.
+   * Useful for merchant dashboards and analytics.
+   *
+   * See PLAN_MANAGEMENT.md for complete merchant API.
+   *
+   * @param planPubkey - Plan to get subscriptions for
+   * @returns Array of subscription accounts
+   *
+   * @deprecated For subscription-only integrations, ignore this method
+   */
   async fetchPlanSubscriptions(
     planPubkey: PublicKey,
   ): Promise<SubscriptionAccount[]> {
@@ -353,7 +646,27 @@ export class SubscriptionSdk {
     );
   }
 
-  /** Fetch all subscriptions belonging to a subscriber wallet. */
+  /**
+   * Fetch all subscriptions for a subscriber wallet.
+   *
+   * Retrieves all active, paused, cancelled, and expired subscriptions
+   * belonging to a wallet. Use this to populate a "My Subscriptions"
+   * view in your app.
+   *
+   * @param subscriber - Subscriber wallet address
+   * @returns Array of subscription accounts
+   *
+   * @example
+   * ```typescript
+   * const mySubscriptions = await sdk.fetchSubscriberSubscriptions(
+   *   wallet.publicKey
+   * );
+   * console.log(`You have ${mySubscriptions.length} subscriptions`);
+   * mySubscriptions.forEach((sub) => {
+   *   console.log(`  - Status: ${sub.status}, Next payment: ${sub.nextPaymentAt}`);
+   * });
+   * ```
+   */
   async fetchSubscriberSubscriptions(
     subscriber: PublicKey,
   ): Promise<SubscriptionAccount[]> {
@@ -385,8 +698,19 @@ export class SubscriptionSdk {
   // ──────────────────────────────────────────────────────────
 
   /**
-   * Aggregate all on-chain data for a merchant into analytics.
-   * Suitable for populating the Merchant Dashboard.
+   * Get aggregated merchant analytics. (Dashboard)
+   *
+   * Fetches all plans and subscriptions for a merchant and computes
+   * aggregated metrics: total revenue, active subscribers, success rates.
+   * Perfect for merchant dashboards.
+   *
+   * See PLAN_MANAGEMENT.md for complete merchant API.
+   *
+   * @param merchant - Merchant wallet address
+   * @param recentLogs - Optional payment execution logs
+   * @returns Aggregated merchant analytics
+   *
+   * @deprecated For subscription-only integrations, ignore this method
    */
   async getAnalytics(
     merchant: PublicKey,
@@ -409,42 +733,149 @@ export class SubscriptionSdk {
   // EVENT LISTENERS (real-time)
   // ──────────────────────────────────────────────────────────
 
+  /**
+   * Listen for successful payment executions.
+   *
+   * Called each time a payment is successfully transferred to the merchant.
+   * Useful for:
+   * - Real-time webhook notifications
+   * - Payment analytics and logging
+   * - UI updates showing recent transactions
+   *
+   * See PLAN_MANAGEMENT.md for complete merchant API.
+   *
+   * @param cb - Callback function receiving (event, slot, signature)
+   * @returns Listener ID (use with removeEventListener)
+   *
+   * @deprecated For subscription-only integrations, ignore this method
+   *
+   * @example
+   * ```typescript
+   * const listenerId = sdk.onPaymentExecuted((event, slot, signature) => {
+   *   console.log(`Payment: ${event.subscriber} paid ${event.amountUsdc / 1e6} USDC`);
+   * });
+   * // Later: sdk.removeEventListener(listenerId);
+   * ```
+   */
   onPaymentExecuted(
     cb: (event: any, slot: number, signature: string) => void,
   ): number {
     return this.program.addEventListener("PaymentExecuted", cb);
   }
 
+  /**
+   * Listen for failed payment executions.
+   *
+   * Called when a payment fails to execute (e.g., insufficient balance,
+   * insufficient delegate authority). Useful for:
+   * - Alerting merchants to payment failures
+   * - Customer support and follow-up
+   * - Retry logic and analytics
+   *
+   * See PLAN_MANAGEMENT.md for complete merchant API.
+   *
+   * @param cb - Callback function receiving (event, slot, signature)
+   * @returns Listener ID (use with removeEventListener)
+   *
+   * @deprecated For subscription-only integrations, ignore this method
+   */
   onPaymentFailed(
     cb: (event: any, slot: number, signature: string) => void,
   ): number {
     return this.program.addEventListener("PaymentFailed", cb);
   }
 
+  /**
+   * Listen for new subscription creations.
+   *
+   * Called when a subscriber signs up for a plan. Useful for:
+   * - Real-time notifications
+   * - Customer welcome flows
+   * - Analytics tracking
+   *
+   * See PLAN_MANAGEMENT.md for complete merchant API.
+   *
+   * @param cb - Callback function receiving (event, slot, signature)
+   * @returns Listener ID (use with removeEventListener)
+   *
+   * @deprecated For subscription-only integrations, ignore this method
+   */
   onSubscriptionCreated(
     cb: (event: any, slot: number, signature: string) => void,
   ): number {
     return this.program.addEventListener("SubscriptionCreated", cb);
   }
 
+  /**
+   * Listen for subscription cancellations.
+   *
+   * Called when a subscriber or merchant cancels a subscription.
+   * Useful for churn analytics and retention campaigns.
+   *
+   * See PLAN_MANAGEMENT.md for complete merchant API.
+   *
+   * @param cb - Callback function receiving (event, slot, signature)
+   * @returns Listener ID (use with removeEventListener)
+   *
+   * @deprecated For subscription-only integrations, ignore this method
+   */
   onSubscriptionCancelled(
     cb: (event: any, slot: number, signature: string) => void,
   ): number {
     return this.program.addEventListener("SubscriptionCancelled", cb);
   }
 
+  /**
+   * Listen for subscription pauses.
+   *
+   * Called when a subscription is paused. Useful for tracking
+   * temporary cancellations and churn analysis.
+   *
+   * See PLAN_MANAGEMENT.md for complete merchant API.
+   *
+   * @param cb - Callback function receiving (event, slot, signature)
+   * @returns Listener ID (use with removeEventListener)
+   *
+   * @deprecated For subscription-only integrations, ignore this method
+   */
   onSubscriptionPaused(
     cb: (event: any, slot: number, signature: string) => void,
   ): number {
     return this.program.addEventListener("SubscriptionPaused", cb);
   }
 
+  /**
+   * Listen for subscription resumptions.
+   *
+   * Called when a paused subscription is resumed.
+   * Useful for win-back tracking.
+   *
+   * See PLAN_MANAGEMENT.md for complete merchant API.
+   *
+   * @param cb - Callback function receiving (event, slot, signature)
+   * @returns Listener ID (use with removeEventListener)
+   *
+   * @deprecated For subscription-only integrations, ignore this method
+   */
   onSubscriptionResumed(
     cb: (event: any, slot: number, signature: string) => void,
   ): number {
     return this.program.addEventListener("SubscriptionResumed", cb);
   }
 
+  /**
+   * Listen for subscription expirations.
+   *
+   * Called when a subscription's delegate expires after 12 cycles.
+   * Useful for renewal reminders.
+   *
+   * See PLAN_MANAGEMENT.md for complete merchant API.
+   *
+   * @param cb - Callback function receiving (event, slot, signature)
+   * @returns Listener ID (use with removeEventListener)
+   *
+   * @deprecated For subscription-only integrations, ignore this method
+   */
   onSubscriptionExpired(
     cb: (event: any, slot: number, signature: string) => void,
   ): number {

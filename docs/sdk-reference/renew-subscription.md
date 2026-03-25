@@ -1,22 +1,23 @@
 # renewSubscription()
 
-Renew an expired subscription for another billing cycle.
+Renew an expired subscription by re-approving delegate authority.
 
 ## Overview
 
-When a subscription expires (due to 3 consecutive payment failures or merchant cancellation), a subscriber can renew it to resume automatic payments. Renewal creates a new Subscription PDA with a fresh payment schedule.
+When a subscription expires, the subscriber can renew it to resume automatic payments. Renewal updates the existing subscription by re-approving delegate authority for future cycles.
 
 ## Parameters
 
-| Parameter    | Type      | Required | Description                                |
-| ------------ | --------- | -------- | ------------------------------------------ |
-| `planPubkey` | PublicKey | ✓        | Address of the Plan PDA to resubscribe to. |
+| Parameter            | Type      | Required | Description                           |
+| -------------------- | --------- | -------- | ------------------------------------- |
+| `subscriptionPubkey` | PublicKey | ✓        | Address of the expired subscription.  |
+| `planPubkey`         | PublicKey | ✓        | Address of the plan for subscription. |
 
 ## Returns
 
 ```typescript
-interface CreateSubscriptionResult {
-  subscriptionPubkey: PublicKey; // New Subscription PDA address
+interface RenewSubscriptionResult {
+  subscriptionPubkey: PublicKey; // Same subscription address
   signature: string; // Transaction signature
 }
 ```
@@ -24,33 +25,25 @@ interface CreateSubscriptionResult {
 ## Example
 
 ```typescript
-const { subscriptionPubkey, signature } = await sdk.renewSubscription({
-  planPubkey: new PublicKey("..."),
-});
+const { subscriptionPubkey, signature } = await sdk.renewSubscription(
+  new PublicKey("subscription_pubkey"),
+  new PublicKey("plan_pubkey"),
+);
 
-console.log("Renewed:", subscriptionPubkey.toBase58());
+console.log("Renewed subscription:", subscriptionPubkey.toBase58());
+console.log("Tx:", signature);
 ```
 
 ## When to use
 
 - **After auto-expiry** - 3 payment failures triggered auto-expiry; user wants to resume.
-- **After cancellation** - Subscriber wants to re-enable same plan.
-- **Plan upgrade** - Create a new subscription to a different (higher-tier) plan.
 
 ## What happens
 
-1. A **new Subscription PDA** is created (different address than the original).
-2. Trial period (if any) is applied again.
-3. SPL delegate approval is requested again in Phantom.
-4. Keeper resumes making scheduled payments on the new subscription.
-
-## Difference from cancellation
-
-| Action                 | Result                                      | Reversible                       |
-| ---------------------- | ------------------------------------------- | -------------------------------- |
-| `cancelSubscription()` | Stops payments; keeps same subscription PDA | N/A (new subscription via renew) |
-| `renewSubscription()`  | Creates new subscription; restarts payments | Yes (can cancel again)           |
-| Auto-expiry            | Stops payments after 3 failures             | Yes (renew)                      |
+1. Existing subscription is reactivated from expired state.
+2. SPL delegate approval is requested again in Phantom.
+3. Billing schedule resumes using subscription settings.
+4. Keeper resumes scheduled payment execution.
 
 ## Example: renewal flow
 
@@ -58,14 +51,12 @@ console.log("Renewed:", subscriptionPubkey.toBase58());
 // Check if subscription expired
 const subscription = await sdk.fetchSubscription(subscriptionPubkey);
 
-if (subscription.status === "Expired") {
-  // Show "Reactivate" button to subscriber
-  const handleReactivate = async () => {
-    const { subscriptionPubkey: newSubPubkey } = await sdk.renewSubscription({
-      planPubkey: subscription.plan,
-    });
-    console.log("New subscription:", newSubPubkey.toBase58());
-  };
+if (subscription && subscription.status === "Expired") {
+  const { signature } = await sdk.renewSubscription(
+    subscription.publicKey,
+    subscription.plan,
+  );
+  console.log("Renewed:", signature);
 }
 ```
 

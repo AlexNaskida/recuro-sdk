@@ -4,27 +4,27 @@
 
 Subscribe once. Pay automatically.
 
-Recuro eliminates the complexity of recurring payments on blockchain. Merchants define a plan with immutable pricing. Subscribers grant a limited SPL delegate approval. The keeper executes payments reliably, on-chain, with no backend required.
+Recuro enables users to manage recurring USDC payments that are controlled entirely by them. Funds stay in subscriber wallets until payment executes on-chain. Subscriptions are trustless—no backend required.
 
 ## What you can build
 
 - **SaaS platforms** with monthly or annual billing
-- **Membership programs** with tiered pricing and free trials
-- **Marketplaces** with vendor commission automation
-- **Content platforms** with subscription gates and analytics
+- **Membership programs** with cancellation anytime
+- **Content platforms** with subscription gates
+- **Service marketplaces** with recurring billing
 
 ## Key guarantees
 
-- **Price locked** - Set your price once. It cannot change.
-- **Non-custodial** - Subscriber funds never leave their wallet.
-- **Cancel instantly** - One click revokes all future payments.
-- **Keeper redundancy** - No single server can drain your subscribers.
+- **Non-custodial** - Subscriber funds never leave their wallet
+- **Cancel instantly** - Revoke approval in Phantom, zero future exposure
+- **Price locked** - Plan price cannot change mid-subscription
+- **Open keeper network** - Multiple keepers ensure reliable payment execution
 
 ## Get started
 
-- [**Quick Start**](./getting-started/quick-start.md) - Install and deploy your first plan in 5 minutes
-- [**Why Recuro**](./why-recuro.md) - See how we're different
-- [**Integration Guide**](./getting-started/integration-guide.md) - Full 8-step setup walkthrough
+- [**Quick Start**](./getting-started/quick-start.md) - Subscribe to your first plan in 5 minutes
+- [**Why Recuro**](./why-recuro.md) - See how we're different from competitors
+- [**Integration Guide**](./getting-started/integration-guide.md) - Full walkthrough with React examples
 
 ## Install now
 
