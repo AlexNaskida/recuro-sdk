@@ -10,7 +10,7 @@ Archiving a plan:
 
 - **Stops** new subscriptions from being created
 - **Preserves** all existing subscriptions (they continue billing normally)
-- **Cannot be undone** - once archived, always archived
+- **Reversible** - use `unarchivePlan()` to reactivate
 
 Use this to retire old plans while honoring commitments to existing subscribers.
 
@@ -91,7 +91,7 @@ if (new Date() > promoEndDate) {
 
 ## Important Notes
 
-1. **Irreversible**: Archiving cannot be undone. Create a new plan if you need similar functionality.
+1. **Reversible**: Use `unarchivePlan()` to reactivate an archived plan.
 
 2. **Existing subscribers unaffected**: All active subscriptions continue to work normally with their original pricing.
 
@@ -99,10 +99,14 @@ if (new Date() > promoEndDate) {
 
 4. **Plan data preserved**: All plan data remains on-chain and queryable.
 
+5. **Deletion**: To permanently delete a plan, archive it first, then call `deletePlan()` (requires zero active subscribers).
+
 ## Related
 
 - [createPlan()](./create-plan.md) - Create a new plan
 - [updatePlan()](./update-plan.md) - Modify plan metadata
+- [unarchivePlan()](./unarchive-plan.md) - Reactivate an archived plan
+- [deletePlan()](./delete-plan.md) - Permanently delete a plan
 - [Fetch Methods](./fetch-methods.md) - Query plans and subscriptions
 
 ---

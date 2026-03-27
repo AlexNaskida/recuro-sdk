@@ -226,6 +226,62 @@ export class SubscriptionSdk {
       .rpc({ commitment: this.provider.opts.commitment });
   }
 
+  /**
+   * Unarchive a plan. (Merchant only)
+   *
+   * Reactivates an archived plan to accept new subscriptions again.
+   * Existing subscriptions are unaffected.
+   *
+   * @param planPubkey - Plan to unarchive
+   * @returns Transaction signature
+   * @throws "Plan not found" if planPubkey is invalid
+   * @throws Error if caller is not the merchant
+   * @throws Error if plan is not archived
+   *
+   * @deprecated For subscription-only integrations, ignore this method
+   */
+  async unarchivePlan(planPubkey: PublicKey): Promise<TransactionSignature> {
+    const merchant = this.provider.wallet.publicKey;
+    return this.program.methods
+      .unarchivePlan()
+      .accounts({
+        merchant,
+        plan: planPubkey,
+      })
+      .rpc({ commitment: this.provider.opts.commitment });
+  }
+
+  /**
+   * Delete a plan permanently. (Merchant only)
+   *
+   * Permanently removes a plan from the blockchain. This is irreversible.
+   * Requirements:
+   * - Plan must be archived first
+   * - Plan must have no active subscribers
+   *
+   * Rent from the closed account is returned to the merchant.
+   *
+   * @param planPubkey - Plan to delete
+   * @returns Transaction signature
+   * @throws "Plan not found" if planPubkey is invalid
+   * @throws Error if caller is not the merchant
+   * @throws Error if plan is not archived
+   * @throws Error if plan has active subscribers
+   *
+   * @deprecated For subscription-only integrations, ignore this method
+   */
+  async deletePlan(planPubkey: PublicKey): Promise<TransactionSignature> {
+    const merchant = this.provider.wallet.publicKey;
+    return this.program.methods
+      .deletePlan()
+      .accounts({
+        merchant,
+        plan: planPubkey,
+        systemProgram: SystemProgram.programId,
+      })
+      .rpc({ commitment: this.provider.opts.commitment });
+  }
+
   // ──────────────────────────────────────────────────────────
   // SUBSCRIPTION INSTRUCTIONS (subscriber)
   // ──────────────────────────────────────────────────────────

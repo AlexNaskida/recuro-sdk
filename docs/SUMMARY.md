@@ -31,6 +31,8 @@
 - [Create a Plan](sdk-reference/create-plan.md)
 - [Update a Plan](sdk-reference/update-plan.md)
 - [Archive a Plan](sdk-reference/archive-plan.md)
+- [Unarchive a Plan](sdk-reference/unarchive-plan.md)
+- [Delete a Plan](sdk-reference/delete-plan.md)
 
 ## Keeper (Payment Execution)
 

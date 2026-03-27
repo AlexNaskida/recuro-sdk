@@ -49,7 +49,7 @@ The keeper signs transactions with its own keypair. It does **NOT** need access 
 
 | Item             | Details                                                  |
 | ---------------- | -------------------------------------------------------- |
-| **Gas cost**     | ~0.001 SOL per payment (~$0.0002 at current prices)      |
+| **Gas cost**     | Minimal (~0.001 SOL per payment, a fraction of a cent)   |
 | **Rewards**      | None in v1 - keepers operate without on-chain incentives |
 | **Who pays gas** | Keeper pays, not reimbursed                              |
 

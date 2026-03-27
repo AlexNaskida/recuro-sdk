@@ -5,14 +5,14 @@
 [![npm version](https://img.shields.io/npm/v/@recuro/sdk.svg)](https://www.npmjs.com/package/@recuro/sdk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-Recuro enables automated USDC subscription payments without custodying subscriber funds. Subscribers approve a limited delegate — funds stay in their wallet until each payment executes on-chain.
+Recuro enables automated USDC subscription payments without custodying subscriber funds. Subscribers approve a limited delegate - funds stay in their wallet until each payment executes on-chain.
 
 ## Features
 
-- **Non-custodial** — Funds remain in subscriber wallets until payment time
-- **Immutable pricing** — Plan prices are locked on-chain, protecting subscribers
-- **Instant cancellation** — Revoking delegate stops all future payments immediately
-- **Open keeper architecture** — Anyone can run payment execution, no single point of failure
+- **Non-custodial** - Funds remain in subscriber wallets until payment time
+- **Immutable pricing** - Plan prices are locked on-chain, protecting subscribers
+- **Instant cancellation** - Revoking delegate stops all future payments immediately
+- **Open keeper architecture** - Anyone can run payment execution, no single point of failure
 
 ## Installation
 
@@ -69,11 +69,13 @@ const subscriptions = await sdk.fetchSubscriberSubscriptions(userWallet);
 
 ### Plan Management
 
-| Method          | Description                    |
-| --------------- | ------------------------------ |
-| `createPlan()`  | Create a new subscription plan |
-| `updatePlan()`  | Update plan metadata           |
-| `archivePlan()` | Stop accepting new subscribers |
+| Method            | Description                    |
+| ----------------- | ------------------------------ |
+| `createPlan()`    | Create a new subscription plan |
+| `updatePlan()`    | Update plan metadata           |
+| `archivePlan()`   | Stop accepting new subscribers |
+| `unarchivePlan()` | Reactivate an archived plan    |
+| `deletePlan()`    | Permanently delete a plan      |
 
 ### Real-time Events
 
@@ -99,9 +101,9 @@ const sdk = new SubscriptionSdk(provider, {
 
 ## How It Works
 
-1. **Subscriber approves delegate** — Authorizes the subscription PDA to transfer up to 12 billing cycles
-2. **Subscription PDA created** — Locks in plan price and subscriber details on-chain
-3. **Keeper executes payments** — Off-chain bot validates timing and transfers USDC to merchant
+1. **Subscriber approves delegate** - Authorizes the subscription PDA to transfer up to 12 billing cycles
+2. **Subscription PDA created** - Locks in plan price and subscriber details on-chain
+3. **Keeper executes payments** - Off-chain bot validates timing and transfers USDC to merchant
 
 Funds never leave the subscriber's wallet until payment time. Cancel anytime to immediately revoke delegate access.
 

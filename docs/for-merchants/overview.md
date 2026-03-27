@@ -24,7 +24,7 @@ This guide helps merchants understand how to use the Recuro SDK effectively.
 
 ## About Plan Management
 
-The SDK includes full plan management methods (`createPlan()`, `updatePlan()`, `archivePlan()`), and they work! However, **merchants typically don't need to use them directly**.
+The SDK includes full plan management methods, and they work! However, **merchants typically don't need to use them directly**.
 
 ### Why?
 
@@ -50,6 +50,8 @@ See SDK Reference for technical details:
 - [createPlan()](../sdk-reference/create-plan.md)
 - [updatePlan()](../sdk-reference/update-plan.md)
 - [archivePlan()](../sdk-reference/archive-plan.md)
+- [unarchivePlan()](../sdk-reference/unarchive-plan.md)
+- [deletePlan()](../sdk-reference/delete-plan.md)
 
 ### The SDK Has Plan Code - Use It If You Need It
 
@@ -73,6 +75,12 @@ await sdk.updatePlan({
 
 // Archive a plan (stops new subscriptions)
 await sdk.archivePlan(planAddress);
+
+// Reactivate an archived plan
+await sdk.unarchivePlan(planAddress);
+
+// Permanently delete (must be archived + no active subscribers)
+await sdk.deletePlan(planAddress);
 ```
 
 **Bottom line:** The SDK can manage plans, but you'll spend most of your integration time on subscription management - that's where your customers interact with Recuro.
