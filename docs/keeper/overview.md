@@ -45,16 +45,37 @@ The keeper signs transactions with its own keypair. It does **NOT** need access 
 
 ## Cost and rewards
 
-- **Gas cost**: ~0.001 SOL per payment (varies by network congestion)
-- **Rewards**: Protocol treasury reimburses keeper for gas
-- **Net cost to merchant**: 0 (rewards cover gas; merchant pays protocol fee embedded in transaction)
+### Current Model (v1)
+
+| Item             | Details                                                  |
+| ---------------- | -------------------------------------------------------- |
+| **Gas cost**     | ~0.001 SOL per payment (~$0.0002 at current prices)      |
+| **Rewards**      | None in v1 — keepers operate without on-chain incentives |
+| **Who pays gas** | Keeper pays, not reimbursed                              |
+
+### Who Should Run a Keeper (v1)
+
+- **Merchants**: Run your own keeper to ensure your subscriptions always execute on time
+- **Protocol supporters**: Help the network by running altruistic keepers
+- **Developers**: Test integrations and understand the payment flow
+
+### Future Incentivization (v2 Roadmap)
+
+On-chain keeper rewards are planned for v2, where keepers will earn a small fee for each successful payment execution:
+
+- **Reward**: ~0.1% of payment amount or fixed minimum
+- **Source**: Protocol treasury (not deducted from merchants/subscribers)
+- **Distribution**: Race-based — first valid execution wins
+
+See [Multiple Keepers](./multiple-keepers.md#keeper-incentivization-future-roadmap) for full details on the incentivization roadmap.
 
 ## Reliability
 
-- **No single point of failure**: Multiple keepers can run simultaneously
-- **Idempotent**: If two keepers execute the same subscription, the second fails gracefully (already paid at that time)
-- **Offline tolerance**: If keeper goes down, payments are simply delayed until it restarts
-- **Auto-recovery**: After recovery, keeper catches up without backlog
+- **No single point of failure**: Multiple keepers can run simultaneously without coordination
+- **Idempotent**: If two keepers execute the same subscription, the second fails gracefully (blockchain prevents double-charging)
+- **Offline tolerance**: If keeper goes down, payments are delayed until it restarts
+- **Auto-recovery**: After keeper comes back online, it automatically catches up on all missed payments
+- **Missed payment handling**: Subscriptions overdue by hours or days are automatically detected and processed on next poll
 
 ---
 

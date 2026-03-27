@@ -2,9 +2,18 @@
 
 Create a new subscription plan with fixed, immutable pricing.
 
+> **For Merchants**: This documentation covers programmatic plan creation via the SDK. While fully functional, **most merchants create plans through admin dashboards** rather than directly calling this method. See [Merchant Overview](../for-merchants/overview.md) for recommended integration architecture.
+>
+> **When to use this method:**
+>
+> - Automated plan import (migrating from Stripe, etc.)
+> - Seeding test plans in development
+> - API integrations that need programmatic plan creation
+> - Dynamic plan generation based on external data
+
 ## Overview
 
-Plans define the terms of a subscription: price, billing interval, trial period, and capacity. Once created, a plan's price and interval **cannot be changed**-this protects subscribers from surprise price increases mid-subscription.
+Plans define the terms of a subscription: price, billing interval, trial period, and capacity. Once created, a plan's price and interval **cannot be changed** — this protects subscribers from surprise price increases mid-subscription.
 
 ## Parameters
 
