@@ -37,10 +37,10 @@ console.log("  Payments will not execute until you resume");
 
 ## When to use
 
-- **Temporarily stop payments** — You need a break but plan to continue
-- **Avoid cancellation fees** — Some plans may charge for cancellation, but pause is free
-- **Budget tight** — Pause for a month, resume when ready
-- **Try before committing** — Pause during trial to check if you'll like the service
+- **Temporarily stop payments** - You need a break but plan to continue
+- **Avoid cancellation fees** - Some plans may charge for cancellation, but pause is free
+- **Budget tight** - Pause for a month, resume when ready
+- **Try before committing** - Pause during trial to check if you'll like the service
 
 ## Comparison with Cancel
 
@@ -69,9 +69,9 @@ try {
 
 ## Next steps
 
-- [Cancel a Subscription](./cancel-subscription.md) — Permanently end subscription
-- [Resume a Subscription](./resume-subscription.md) — Restart payments
-- [View Your Subscriptions](./fetch-methods.md) — Check subscription status
+- [Cancel a Subscription](./cancel-subscription.md) - Permanently end subscription
+- [Resume a Subscription](./resume-subscription.md) - Restart payments
+- [View Your Subscriptions](./fetch-methods.md) - Check subscription status
 
 ---
 

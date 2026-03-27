@@ -87,7 +87,7 @@ console.log("✓ Subscription cancelled - delegate revoked");
 - When you subscribed, you approved a **scoped SPL delegate** limited to the plan amount per cycle.
 - A Subscription PDA was created on-chain linking your wallet to the plan.
 - The keeper will execute your first payment after any trial period.
-- You can pause, resume, or cancel anytime—cancellation immediately revokes the delegate.
+- You can pause, resume, or cancel anytime-cancellation immediately revokes the delegate.
 
 ## Next steps
 

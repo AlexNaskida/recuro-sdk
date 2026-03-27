@@ -50,7 +50,7 @@ The keeper signs transactions with its own keypair. It does **NOT** need access 
 | Item             | Details                                                  |
 | ---------------- | -------------------------------------------------------- |
 | **Gas cost**     | ~0.001 SOL per payment (~$0.0002 at current prices)      |
-| **Rewards**      | None in v1 — keepers operate without on-chain incentives |
+| **Rewards**      | None in v1 - keepers operate without on-chain incentives |
 | **Who pays gas** | Keeper pays, not reimbursed                              |
 
 ### Who Should Run a Keeper (v1)
@@ -65,7 +65,7 @@ On-chain keeper rewards are planned for v2, where keepers will earn a small fee 
 
 - **Reward**: ~0.1% of payment amount or fixed minimum
 - **Source**: Protocol treasury (not deducted from merchants/subscribers)
-- **Distribution**: Race-based — first valid execution wins
+- **Distribution**: Race-based - first valid execution wins
 
 See [Multiple Keepers](./multiple-keepers.md#keeper-incentivization-future-roadmap) for full details on the incentivization roadmap.
 

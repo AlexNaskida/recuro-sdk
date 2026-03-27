@@ -13,7 +13,7 @@ Create a new subscription plan with fixed, immutable pricing.
 
 ## Overview
 
-Plans define the terms of a subscription: price, billing interval, trial period, and capacity. Once created, a plan's price and interval **cannot be changed** — this protects subscribers from surprise price increases mid-subscription.
+Plans define the terms of a subscription: price, billing interval, trial period, and capacity. Once created, a plan's price and interval **cannot be changed** - this protects subscribers from surprise price increases mid-subscription.
 
 ## Parameters
 

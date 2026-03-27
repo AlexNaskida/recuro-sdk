@@ -32,10 +32,10 @@ Authorized signer: [Your wallet]
 
 ### Why it's safe
 
-- **Limited to plan amount** — Delegate cannot transfer more than the plan price per cycle
-- **Bounded exposure** — If compromised, max loss is one billing cycle
-- **Revokable anytime** — You can revoke it from Phantom instantly
-- **One approval, all payments** — No re-approval needed each month
+- **Limited to plan amount** - Delegate cannot transfer more than the plan price per cycle
+- **Bounded exposure** - If compromised, max loss is one billing cycle
+- **Revokable anytime** - You can revoke it from Phantom instantly
+- **One approval, all payments** - No re-approval needed each month
 
 ## Payment execution
 
@@ -71,8 +71,8 @@ Authorized signer: [Your wallet]
 ### Cancelled
 
 - Subscription is terminated
-- **Delegate is immediately revoked** — No future payments possible
-- **Irreversible** — Must subscribe again to restart
+- **Delegate is immediately revoked** - No future payments possible
+- **Irreversible** - Must subscribe again to restart
 - Rent may be returned to your wallet
 
 ### Expired
@@ -83,7 +83,7 @@ Authorized signer: [Your wallet]
 
 ## Why the keeper model works
 
-The keeper is **stateless**—it's just a process that:
+The keeper is **stateless**-it's just a process that:
 
 - Polls subscriptions on-chain
 - Checks if next_payment_time has arrived
@@ -103,7 +103,7 @@ The keeper is **stateless**—it's just a process that:
 | What Could Happen         | Your Protection                                                |
 | ------------------------- | -------------------------------------------------------------- |
 | Merchant gets hacked      | Funds never in merchant wallet until transfer                  |
-| Keeper gets hacked        | Keeper can't change amounts or direction—all enforced on-chain |
+| Keeper gets hacked        | Keeper can't change amounts or direction-all enforced on-chain |
 | Delegate compromised      | Only plan amount per cycle, not your full balance              |
 | Delegate approval revoked | You can revoke anytime; zero future exposure                   |
 | USDC token bug            | Not Recuro's responsibility; same as any USDC holder           |

@@ -216,9 +216,9 @@ async function getAnalyticsCached() {
 
 ## Related
 
-- [Fetch Methods](./fetch-methods.md) — Individual data fetching
-- [Event Listeners](./event-listeners.md) — Real-time updates
-- [Merchant Overview](../for-merchants/overview.md) — Integration guide
+- [Fetch Methods](./fetch-methods.md) - Individual data fetching
+- [Event Listeners](./event-listeners.md) - Real-time updates
+- [Merchant Overview](../for-merchants/overview.md) - Integration guide
 
 ---
 

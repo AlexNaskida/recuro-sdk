@@ -2,7 +2,7 @@
 
 Complete walkthrough to integrate Recuro subscription management into your app.
 
-This guide focuses on **customer-facing subscription management** — the primary use case for the SDK. For information about plan creation, see the [Merchant Overview](../for-merchants/overview.md).
+This guide focuses on **customer-facing subscription management** - the primary use case for the SDK. For information about plan creation, see the [Merchant Overview](../for-merchants/overview.md).
 
 ## Prerequisites
 
@@ -29,11 +29,9 @@ const { wallet, publicKey } = useWallet();
 const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
 // Create provider with connected wallet
-const provider = new AnchorProvider(
-  connection,
-  wallet.adapter,
-  { commitment: "confirmed" }
-);
+const provider = new AnchorProvider(connection, wallet.adapter, {
+  commitment: "confirmed",
+});
 
 // Initialize SDK
 const sdk = new SubscriptionSdk(provider, { cluster: "devnet" });

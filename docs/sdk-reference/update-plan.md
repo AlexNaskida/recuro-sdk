@@ -32,8 +32,8 @@ async updatePlan(params: UpdatePlanParams): Promise<TransactionSignature>
 | Description     | Yes       | For display purposes                    |
 | Max Subscribers | Yes       | Can increase or decrease                |
 | Receive Address | Yes       | Changes where future payments go        |
-| **Price**       | **No**    | Immutable — protects subscribers        |
-| **Interval**    | **No**    | Immutable — protects subscribers        |
+| **Price**       | **No**    | Immutable - protects subscribers        |
+| **Interval**    | **No**    | Immutable - protects subscribers        |
 
 ## Example
 
@@ -94,8 +94,8 @@ await sdk.updatePlan({
 
 ## Related
 
-- [createPlan()](./create-plan.md) — Create a new plan
-- [archivePlan()](./archive-plan.md) — Stop accepting new subscribers
+- [createPlan()](./create-plan.md) - Create a new plan
+- [archivePlan()](./archive-plan.md) - Stop accepting new subscribers
 
 ---
 

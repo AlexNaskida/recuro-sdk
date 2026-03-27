@@ -10,7 +10,7 @@ Archiving a plan:
 
 - **Stops** new subscriptions from being created
 - **Preserves** all existing subscriptions (they continue billing normally)
-- **Cannot be undone** — once archived, always archived
+- **Cannot be undone** - once archived, always archived
 
 Use this to retire old plans while honoring commitments to existing subscribers.
 
@@ -101,9 +101,9 @@ if (new Date() > promoEndDate) {
 
 ## Related
 
-- [createPlan()](./create-plan.md) — Create a new plan
-- [updatePlan()](./update-plan.md) — Modify plan metadata
-- [Fetch Methods](./fetch-methods.md) — Query plans and subscriptions
+- [createPlan()](./create-plan.md) - Create a new plan
+- [updatePlan()](./update-plan.md) - Modify plan metadata
+- [Fetch Methods](./fetch-methods.md) - Query plans and subscriptions
 
 ---
 

@@ -1,5 +1,5 @@
 /**
- * SubscriptionSdk — primary interface for interacting with the
+ * SubscriptionSdk - primary interface for interacting with the
  * solana-subscription program from TypeScript / JavaScript.
  *
  * Usage:
@@ -239,7 +239,7 @@ export class SubscriptionSdk {
    *
    * **What happens:**
    * 1. Verifies the plan is Active with available capacity
-   * 2. Creates a Subscription PDA (amount locked to plan price—no spoofing)
+   * 2. Creates a Subscription PDA (amount locked to plan price-no spoofing)
    * 3. Approves the Subscription PDA as SPL delegate for up to 12 billing cycles
    * 4. First payment scheduled 1 cycle from now (or after trial if applicable)
    *
@@ -462,7 +462,7 @@ export class SubscriptionSdk {
    * Cancel a subscription permanently.
    *
    * **This is irreversible.** Immediately revokes the SPL delegate and
-   * stops all future payments. No way to undo—user will need to subscribe
+   * stops all future payments. No way to undo-user will need to subscribe
    * to the plan again to restart.
    *
    * **Effects:**
@@ -474,7 +474,7 @@ export class SubscriptionSdk {
    *
    * **Who can cancel:**
    * - The subscriber (original signer)
-   * - The merchant (plan creator) — useful if customer disputes charge
+   * - The merchant (plan creator) - useful if customer disputes charge
    *
    * **Security guarantee:**
    * - Even if keeper is compromised, no payments can execute after cancel

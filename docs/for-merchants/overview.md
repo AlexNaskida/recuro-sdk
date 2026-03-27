@@ -8,19 +8,19 @@ This guide helps merchants understand how to use the Recuro SDK effectively.
 
 **The Recuro SDK is designed for customer-facing subscription management.** This means your integration will focus on:
 
-| Feature            | What It Does                           | SDK Method                     |
-| ------------------ | -------------------------------------- | ------------------------------ |
-| Display plans      | Show pricing options to customers      | `fetchMerchantPlans()`         |
-| Subscribe          | Let customers start a subscription     | `createSubscription()`         |
-| Pause              | Temporarily stop payments              | `pauseSubscription()`          |
-| Resume             | Reactivate a paused subscription       | `resumeSubscription()`         |
-| Cancel             | End subscription permanently           | `cancelSubscription()`         |
-| Renew              | Renew an expired subscription          | `renewSubscription()`          |
-| View status        | Show subscription details              | `fetchSubscription()`          |
+| Feature            | What It Does                           | SDK Method                       |
+| ------------------ | -------------------------------------- | -------------------------------- |
+| Display plans      | Show pricing options to customers      | `fetchMerchantPlans()`           |
+| Subscribe          | Let customers start a subscription     | `createSubscription()`           |
+| Pause              | Temporarily stop payments              | `pauseSubscription()`            |
+| Resume             | Reactivate a paused subscription       | `resumeSubscription()`           |
+| Cancel             | End subscription permanently           | `cancelSubscription()`           |
+| Renew              | Renew an expired subscription          | `renewSubscription()`            |
+| View status        | Show subscription details              | `fetchSubscription()`            |
 | List subscriptions | Get all subscriptions for a user       | `fetchSubscriberSubscriptions()` |
-| Analytics          | Revenue, churn, and subscriber metrics | `getAnalytics()`               |
+| Analytics          | Revenue, churn, and subscriber metrics | `getAnalytics()`                 |
 
-**This is the recommended integration approach** — and what 90% of the SDK documentation covers.
+**This is the recommended integration approach** - and what 90% of the SDK documentation covers.
 
 ## About Plan Management
 
@@ -30,9 +30,9 @@ The SDK includes full plan management methods (`createPlan()`, `updatePlan()`, `
 
 Plans are usually created once and rarely change. Most merchants prefer:
 
-1. **Admin dashboard** — Visual interface for non-technical team members
-2. **Direct on-chain** — One-time setup during initial deployment
-3. **Backend API** — If you need programmatic plan creation
+1. **Admin dashboard** - Visual interface for non-technical team members
+2. **Direct on-chain** - One-time setup during initial deployment
+3. **Backend API** - If you need programmatic plan creation
 
 ### When to Use SDK Plan Methods
 
@@ -46,11 +46,12 @@ The SDK's plan management is useful for:
 | **API integrations** | Exposing plan management via your backend    |
 
 See SDK Reference for technical details:
+
 - [createPlan()](../sdk-reference/create-plan.md)
 - [updatePlan()](../sdk-reference/update-plan.md)
 - [archivePlan()](../sdk-reference/archive-plan.md)
 
-### The SDK Has Plan Code — Use It If You Need It
+### The SDK Has Plan Code - Use It If You Need It
 
 We want to be transparent: the SDK includes full plan management functionality. You can:
 
@@ -74,7 +75,7 @@ await sdk.updatePlan({
 await sdk.archivePlan(planAddress);
 ```
 
-**Bottom line:** The SDK can manage plans, but you'll spend most of your integration time on subscription management — that's where your customers interact with Recuro.
+**Bottom line:** The SDK can manage plans, but you'll spend most of your integration time on subscription management - that's where your customers interact with Recuro.
 
 ## Quick Start Example
 
@@ -144,21 +145,21 @@ function SubscribePage() {
 
 ## SDK Documentation Map
 
-| I want to...                | Read this                                                    |
-| --------------------------- | ------------------------------------------------------------ |
-| Get started quickly         | [Quick Start](../getting-started/quick-start.md)             |
-| See full React examples     | [Integration Guide](../getting-started/integration-guide.md) |
-| Understand how it works     | [How It Works](../getting-started/how-it-works.md)           |
-| Run payment execution       | [Keeper Overview](../keeper/overview.md)                     |
-| Learn about security        | [Security Overview](../security/overview.md)                 |
-| Manage plans programmatically | [Plan Management](../sdk-reference/create-plan.md)         |
-| Listen to real-time events  | [Event Listeners](../sdk-reference/event-listeners.md)       |
-| Get analytics and metrics   | [getAnalytics()](../sdk-reference/analytics.md)              |
+| I want to...                  | Read this                                                    |
+| ----------------------------- | ------------------------------------------------------------ |
+| Get started quickly           | [Quick Start](../getting-started/quick-start.md)             |
+| See full React examples       | [Integration Guide](../getting-started/integration-guide.md) |
+| Understand how it works       | [How It Works](../getting-started/how-it-works.md)           |
+| Run payment execution         | [Keeper Overview](../keeper/overview.md)                     |
+| Learn about security          | [Security Overview](../security/overview.md)                 |
+| Manage plans programmatically | [Plan Management](../sdk-reference/create-plan.md)           |
+| Listen to real-time events    | [Event Listeners](../sdk-reference/event-listeners.md)       |
+| Get analytics and metrics     | [getAnalytics()](../sdk-reference/analytics.md)              |
 
 ## Next Steps
 
-1. **Start here**: [Integration Guide](../getting-started/integration-guide.md) — Full React walkthrough
-2. **Run a keeper**: [Keeper Setup](../keeper/running-your-own.md) — Ensure payments execute
+1. **Start here**: [Integration Guide](../getting-started/integration-guide.md) - Full React walkthrough
+2. **Run a keeper**: [Keeper Setup](../keeper/running-your-own.md) - Ensure payments execute
 3. **Go live**: Follow the production checklist in the Integration Guide
 
 ---

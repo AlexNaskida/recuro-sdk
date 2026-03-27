@@ -14,7 +14,7 @@ Run multiple keepers for redundancy and increased payment throughput.
 Multiple independent keepers watch the same on-chain state and **race** to execute payments.
 The first one to land the transaction wins. The others back off silently.
 
-**Key principle: No consensus required** — keepers operate completely independently. They don't communicate with each other or coordinate actions. The blockchain itself prevents double-charging through atomic state updates.
+**Key principle: No consensus required** - keepers operate completely independently. They don't communicate with each other or coordinate actions. The blockchain itself prevents double-charging through atomic state updates.
 
 | Keeper   | Region       | Role                        |
 | -------- | ------------ | --------------------------- |
@@ -27,7 +27,7 @@ The result is always the same regardless of which keeper fires:
 
 ## How subscription discovery works
 
-Keepers **dynamically discover** all due subscriptions on every poll — they do NOT hardcode addresses.
+Keepers **dynamically discover** all due subscriptions on every poll - they do NOT hardcode addresses.
 
 **Discovery process:**
 
@@ -85,7 +85,7 @@ subscription.cycles_remaining -= 1;
 
 ## Handling missed subscriptions
 
-Keepers automatically catch and process **missed subscriptions** — subscriptions where the payment time has passed but hasn't been executed yet.
+Keepers automatically catch and process **missed subscriptions** - subscriptions where the payment time has passed but hasn't been executed yet.
 
 **How it works:**
 
@@ -163,7 +163,7 @@ The planned incentivization model will reward keepers for successfully executing
 
 - **Spam prevention**: Rewards only paid for valid executions that actually transfer funds
 - **No fake subscriptions**: Can't create fake subscriptions to farm rewards (requires real USDC flow)
-- **Rate limiting**: Natural rate limit — can only execute each subscription once per billing cycle
+- **Rate limiting**: Natural rate limit - can only execute each subscription once per billing cycle
 - **Sybil resistance**: Running multiple keepers doesn't increase rewards (same payment, same reward)
 
 #### Why Not Included in v1

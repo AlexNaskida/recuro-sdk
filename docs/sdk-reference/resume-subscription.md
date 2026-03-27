@@ -4,7 +4,7 @@ Resume a paused subscription.
 
 ## Overview
 
-Resumes a paused subscription where it left off. The SPL delegate approval remains active, so no new approval is needed—just one transaction to restart.
+Resumes a paused subscription where it left off. The SPL delegate approval remains active, so no new approval is needed-just one transaction to restart.
 
 ## Parameters
 
@@ -37,9 +37,9 @@ console.log("  Payments will restart on schedule");
 
 ## When to use
 
-- **Resume after pause** — You paused temporarily and now want to continue
-- **Simple state management** — Pause/resume for testing or temporary suspension
-- **No re-approval needed** — Faster than cancelling and re-subscribing
+- **Resume after pause** - You paused temporarily and now want to continue
+- **Simple state management** - Pause/resume for testing or temporary suspension
+- **No re-approval needed** - Faster than cancelling and re-subscribing
 
 ## Example: Pause for a month, then resume
 
@@ -92,9 +92,9 @@ console.log({
 
 ## Next steps
 
-- [Pause a Subscription](./pause-subscription.md) — Temporarily stop payments
-- [Cancel a Subscription](./cancel-subscription.md) — Permanently end subscription
-- [View Your Subscriptions](./fetch-methods.md) — Check subscription status
+- [Pause a Subscription](./pause-subscription.md) - Temporarily stop payments
+- [Cancel a Subscription](./cancel-subscription.md) - Permanently end subscription
+- [View Your Subscriptions](./fetch-methods.md) - Check subscription status
 
 ---
 

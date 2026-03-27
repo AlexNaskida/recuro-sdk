@@ -14,7 +14,7 @@ export const USDC_MINT = {
   localnet: new PublicKey("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"),
 } as const;
 
-/** PDA seed buffers — must match the Rust program */
+/** PDA seed buffers - must match the Rust program */
 export const SEEDS = {
   PLAN: Buffer.from("plan"),
   SUBSCRIPTION: Buffer.from("subscription"),
