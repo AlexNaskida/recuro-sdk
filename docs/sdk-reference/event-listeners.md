@@ -2,6 +2,18 @@
 
 Listen to subscription events in real-time as they happen on-chain.
 
+## Available Events
+
+| Method                      | Triggered When                               |
+| --------------------------- | -------------------------------------------- |
+| `onPaymentExecuted()`       | Payment successfully transferred to merchant |
+| `onPaymentFailed()`         | Payment attempt failed (low balance, etc.)   |
+| `onSubscriptionCreated()`   | New subscription created                     |
+| `onSubscriptionCancelled()` | Subscription manually cancelled              |
+| `onSubscriptionPaused()`    | Subscription paused by subscriber            |
+| `onSubscriptionResumed()`   | Paused subscription resumed                  |
+| `onSubscriptionExpired()`   | Subscription auto-expired after failures     |
+
 ## onPaymentExecuted()
 
 Triggered when the keeper successfully transfers USDC from subscriber to merchant.
@@ -58,6 +70,36 @@ sdk.onSubscriptionCancelled((event, slot, signature) => {
   console.log({
     subscription: event.subscription.toBase58(),
     cancelledBy: event.cancelledBy.toBase58(),
+    signature,
+  });
+});
+```
+
+## onSubscriptionPaused()
+
+Triggered when a subscriber pauses their subscription.
+
+```typescript
+sdk.onSubscriptionPaused((event, slot, signature) => {
+  console.log({
+    subscription: event.subscription.toBase58(),
+    subscriber: event.subscriber.toBase58(),
+    pausedAt: new Date(event.timestamp.toNumber() * 1000),
+    signature,
+  });
+});
+```
+
+## onSubscriptionResumed()
+
+Triggered when a subscriber resumes a paused subscription.
+
+```typescript
+sdk.onSubscriptionResumed((event, slot, signature) => {
+  console.log({
+    subscription: event.subscription.toBase58(),
+    subscriber: event.subscriber.toBase58(),
+    resumedAt: new Date(event.timestamp.toNumber() * 1000),
     signature,
   });
 });

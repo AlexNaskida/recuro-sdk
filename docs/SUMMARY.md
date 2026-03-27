@@ -13,23 +13,36 @@
 
 - [Merchant Integration Overview](for-merchants/overview.md)
 
-## Subscription SDK (Primary)
+## SDK Reference
 
-The core SDK methods for customer-facing subscription management:
+### Subscription Management
 
-- [Subscribe to a Plan](sdk-reference/create-subscription.md)
-- [View Subscriptions & Plans](sdk-reference/fetch-methods.md)
-- [Pause a Subscription](sdk-reference/pause-subscription.md)
-- [Resume a Subscription](sdk-reference/resume-subscription.md)
-- [Cancel a Subscription](sdk-reference/cancel-subscription.md)
-- [Renew a Subscription](sdk-reference/renew-subscription.md)
-- [Real-time Events](sdk-reference/event-listeners.md)
+Core methods for managing customer subscriptions on your website:
 
-## Plan Management (Optional)
+- [createSubscription()](sdk-reference/create-subscription.md)
+- [pauseSubscription()](sdk-reference/pause-subscription.md)
+- [resumeSubscription()](sdk-reference/resume-subscription.md)
+- [cancelSubscription()](sdk-reference/cancel-subscription.md)
+- [renewSubscription()](sdk-reference/renew-subscription.md)
 
-The SDK includes plan creation for automated scenarios. Most merchants use admin dashboards instead:
+### Data Fetching
 
-- [Create a Plan](sdk-reference/create-plan.md)
+Retrieve plans, subscriptions, and analytics:
+
+- [Fetch Methods](sdk-reference/fetch-methods.md)
+- [getAnalytics()](sdk-reference/analytics.md)
+
+### Plan Management
+
+Methods for programmatic plan administration (most merchants use admin dashboards instead):
+
+- [createPlan()](sdk-reference/create-plan.md)
+- [updatePlan()](sdk-reference/update-plan.md)
+- [archivePlan()](sdk-reference/archive-plan.md)
+
+### Real-time Events
+
+- [Event Listeners](sdk-reference/event-listeners.md)
 
 ## Keeper (Payment Execution)
 

@@ -106,6 +106,28 @@ subscriptions.forEach((sub) => {
 });
 ```
 
+## fetchPlanSubscriptions()
+
+Get all subscriptions for a specific plan. Useful for merchants to see who is subscribed.
+
+```typescript
+async fetchPlanSubscriptions(planPubkey: PublicKey): Promise<SubscriptionAccount[]>
+```
+
+**Example:**
+
+```typescript
+const subscriptions = await sdk.fetchPlanSubscriptions(planAddress);
+
+console.log(`Plan has ${subscriptions.length} subscriptions`);
+
+// Filter by status
+const active = subscriptions.filter((s) => s.status === "Active");
+const paused = subscriptions.filter((s) => s.status === "Paused");
+
+console.log(`Active: ${active.length}, Paused: ${paused.length}`);
+```
+
 ## Data types
 
 ### PlanAccount
