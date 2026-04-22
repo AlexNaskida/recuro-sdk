@@ -4,7 +4,7 @@ Subscribe a user to a plan and request SPL delegate approval.
 
 ## Overview
 
-Creates a Subscription PDA linking a subscriber to a plan. Triggers a Phantom approval request for a **scoped SPL delegate**-granting the Subscription PDA permission to transfer up to the plan amount per billing cycle.
+Creates a Subscription PDA linking a subscriber to a plan. The same transaction initializes a per-subscription Guard PDA and requests a **scoped SPL delegate** approval for that Guard PDA.
 
 ## Parameters
 
@@ -39,18 +39,18 @@ When `createSubscription()` is called, Phantom pops up an approval request:
 ```
 ⚠️ Request to Approve Token Delegate
 
-Recuro Subscription Program requests permission to transfer from your
+Recuro Guard requests permission to transfer from your
 account.
 
 Token: USDC
-Delegate: [Subscription PDA]
-Amount: 9.99
+Delegate: [Guard PDA]
+Amount: approved recurring allowance
 Authorized signer: [Your wallet]
 
 [Approve] [Reject]
 ```
 
-This approval does **not** transfer funds immediately. It grants permission for the keeper to pull the plan amount once per billing cycle.
+This approval does **not** transfer funds immediately. Payment still requires Guard authorization checks during `executePayment()`.
 
 ## What happens after
 
@@ -61,8 +61,9 @@ This approval does **not** transfer funds immediately. It grants permission for 
 
 ## Approval safety
 
-- **Scoped to plan amount** - Delegate cannot transfer more per cycle.
-- **Scoped to plan** - Different plans have different delegates; a breach in one doesn't expose others.
+- **Guard-enforced amount** - transfer amount is read from Guard state, not caller input.
+- **Guard-enforced destination** - Guard only allows configured merchant receive ATA.
+- **Guard-enforced interval** - Guard blocks early payment attempts.
 - **Revokable** - Subscriber can revoke in Phantom at any time.
 - **One-time approval** - Doesn't require re-approval each payment cycle.
 

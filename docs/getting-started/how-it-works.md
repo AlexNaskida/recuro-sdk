@@ -14,17 +14,17 @@
 
 ## What the SPL delegate approval means
 
-When you subscribe, Phantom shows:
+When you subscribe, Phantom shows a delegate approval to the Guard PDA:
 
 ```
 ⚠️ Request to Approve Token Delegate
 
-Recuro Subscription Program requests permission to transfer from your
+Recuro Guard requests permission to transfer from your
 account.
 
 Token: USDC
-Delegate: [Subscription PDA]
-Amount: 9.99
+Delegate: [Guard PDA]
+Amount: approved allowance (used for recurring cycles)
 Authorized signer: [Your wallet]
 
 [Approve] [Reject]
@@ -32,24 +32,25 @@ Authorized signer: [Your wallet]
 
 ### Why it's safe
 
-- **Limited to plan amount** - Delegate cannot transfer more than the plan price per cycle
-- **Bounded exposure** - If compromised, max loss is one billing cycle
+- **Guard-enforced amount** - Guard always transfers the configured `amount_per_period` (no caller amount input)
+- **Guard-enforced interval** - Guard blocks payment if billing period has not elapsed
+- **Guard-enforced destination** - Guard only allows the configured merchant receive ATA
 - **Revokable anytime** - You can revoke it from Phantom instantly
 - **One approval, all payments** - No re-approval needed each month
 
 ## Payment execution
 
 1. **Keeper monitors** your subscription on-chain
-2. **Waits for next_payment_time** (respects trial period)
-3. **Checks conditions**:
-   - Does delegate approval exist?
-   - Is USDC balance sufficient?
-   - Is three consecutive failures NOT reached?
-4. **Executes transfer** if all conditions pass:
-   - Reads plan amount (locked, cannot change)
-   - Transfers USDC from your wallet to merchant
-   - Updates next_payment_time += interval
-5. **On failure**:
+2. **Calls `executePayment()`** when `next_payment_at` is due
+3. **Subscription program checks** trial/due/balance/failure counters
+4. **Subscription CPI-calls Guard `authorize_payment()`**
+5. **Guard checks**:
+   - caller matches authorized Recuro program key
+   - `period_seconds` has elapsed since `last_executed_at`
+   - destination ATA matches configured merchant receive ATA
+6. **Guard transfers fixed amount** from subscriber ATA to merchant ATA
+7. **Subscription program transfers fee** to treasury and updates state
+8. **On failure**:
    - Low balance? Increments failure counter
    - Delegate revoked? Increments failure counter
    - 3 failures in a row? Subscription auto-expires, rent returned
@@ -95,7 +96,7 @@ The keeper is **stateless**-it's just a process that:
 - Any keeper can do this (no centralization)
 - Multiple keepers can coexist without conflict
 - If one keeper goes down, others continue
-- Rewards funded by protocol, not deducted from you
+- Keepers can operate without special privileges over user funds
 - You benefit from redundancy
 
 ## Fund safety guarantees
@@ -104,7 +105,7 @@ The keeper is **stateless**-it's just a process that:
 | ------------------------- | -------------------------------------------------------------- |
 | Merchant gets hacked      | Funds never in merchant wallet until transfer                  |
 | Keeper gets hacked        | Keeper can't change amounts or direction-all enforced on-chain |
-| Delegate compromised      | Only plan amount per cycle, not your full balance              |
+| Delegate compromised      | Guard still enforces amount, destination, and interval checks  |
 | Delegate approval revoked | You can revoke anytime; zero future exposure                   |
 | USDC token bug            | Not Recuro's responsibility; same as any USDC holder           |
 
@@ -112,7 +113,3 @@ The keeper is **stateless**-it's just a process that:
 
 > 💬 Found an issue or have a question?
 > [Open an issue on GitHub](https://github.com/AlexNaskida/recuro-sdk/issues)
-
-```
-
-```

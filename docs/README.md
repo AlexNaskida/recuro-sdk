@@ -18,6 +18,7 @@ Recuro enables users to manage recurring USDC payments that are controlled entir
 - **Non-custodial** - Subscriber funds never leave their wallet
 - **Cancel instantly** - Revoke approval in Phantom, zero future exposure
 - **Price locked** - Plan price cannot change mid-subscription
+- **Guard-enforced execution** - Amount, interval, caller, and destination are enforced on-chain by Guard
 - **Open keeper network** - Multiple keepers ensure reliable payment execution
 
 ## Get started

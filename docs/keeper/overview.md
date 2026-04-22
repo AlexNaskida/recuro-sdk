@@ -2,7 +2,9 @@
 
 ## What is the keeper
 
-The keeper is a **stateless, permissionless bot** that executes on-chain subscription payments on schedule. It runs 24/7 and watches for subscriptions whose `nextPaymentAt` has arrived, then calls `executePayment()` to transfer USDC from subscriber to merchant.
+The keeper is a **stateless, permissionless bot** that executes on-chain subscription payments on schedule. It runs 24/7 and watches for subscriptions whose `nextPaymentAt` has arrived, then calls `executePayment()`.
+
+`executePayment()` does not transfer principal directly anymore. It CPI-calls the Guard program, and Guard performs the merchant transfer only if its checks pass.
 
 The keeper is **not** a centralized service-it's an open-source script that anyone can run.
 
@@ -14,8 +16,8 @@ The keeper solves this by:
 
 - Polling subscriptions on-chain
 - Detecting when next_payment_time has passed
-- Calling the on-chain instruction to transfer funds
-- Handling gas costs (reimbursed from protocol treasury)
+- Calling the on-chain instruction that routes through Guard authorization
+- Paying transaction fees for submitted transactions
 
 ## Who should run it
 
@@ -31,7 +33,7 @@ Loop every 30 seconds:
   2. Filter: nextPaymentAt <= now
   3. For each subscription:
      - Verify delegate approval is active
-     - Call executePayment() on-chain
+  - Call executePayment() on-chain
      - Log result (success or failure)
 ```
 
@@ -39,9 +41,9 @@ Loop every 30 seconds:
 
 The keeper signs transactions with its own keypair. It does **NOT** need access to subscriber or merchant private keys. The blockchain enforces that:
 
-- Only the plan amount can be transferred (immutable on-chain)
-- Only to the merchant's designated receive address
-- Only if delegate approval is active
+- Only Guard-authorized amount can be transferred
+- Only to Guard-authorized merchant receive ATA
+- Only if Guard period check passes and delegate approval is active
 
 ## Cost and rewards
 
@@ -51,7 +53,7 @@ The keeper signs transactions with its own keypair. It does **NOT** need access 
 | ---------------- | -------------------------------------------------------- |
 | **Gas cost**     | Minimal (~0.001 SOL per payment, a fraction of a cent)   |
 | **Rewards**      | None in v1 - keepers operate without on-chain incentives |
-| **Who pays gas** | Keeper pays, not reimbursed                              |
+| **Who pays gas** | Keeper pays                                              |
 
 ### Who Should Run a Keeper (v1)
 

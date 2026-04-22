@@ -27,8 +27,9 @@ The Subscription Program does not check _who_ calls `executePayment()`. It only 
 
 1. Subscription exists
 2. `nextPaymentAt` has passed
-3. SPL delegate is active
-4. Plan account is valid and unchanged
+3. Guard account matches subscription
+4. SPL delegate is active
+5. Guard `authorize_payment` checks pass (caller, destination, interval, amount)
 
 ```rust
 pub fn execute_payment(ctx: Context<ExecutePayment>) -> Result<()> {
@@ -39,7 +40,7 @@ pub fn execute_payment(ctx: Context<ExecutePayment>) -> Result<()> {
     require!(subscription.nextPaymentAt <= clock.unix_timestamp,
         error!("NotDueYet"));
 
-    // proceed with transfer...
+    // proceed via CPI to Guard authorize_payment...
 }
 ```
 
@@ -105,18 +106,14 @@ Run or contract with 2–3 independent keepers:
 Each keeper is independent. If one is compromised:
 
 - Other two continue executing
-- Revenue loss is temporary (until malicious keeper is identified and revoked)
+- Guard still enforces amount/destination/interval on-chain
 - Switching to new keeper takes minutes
 
 ## Keeper incentives
 
-Keepers are paid by the protocol:
+Current version (v1): keepers are permissionless and generally unrewarded on-chain.
 
-```
-Per-payment reward = (protocol_fee_percentage × amount) / keeper_count
-```
-
-If 3 keepers execute (and 2 fail), all 3 share payment events in logs. The protocol's indexer rewards all 3 equally.
+Any reward mechanism should be treated as a future protocol upgrade and documented separately per deployment.
 
 **Effect**: Keepers are incentivized to:
 
@@ -127,8 +124,8 @@ If 3 keepers execute (and 2 fail), all 3 share payment events in logs. The proto
 **Not incentivized** to:
 
 - Censor payments (another keeper executes)
-- Steal funds (amount is immutable on-chain)
-- Spam transactions (each payment costs keeper gas; reward must exceed gas)
+- Steal funds (Guard enforces amount, interval, and destination)
+- Spam transactions (invalid attempts still fail Guard/subscription checks)
 
 ---
 

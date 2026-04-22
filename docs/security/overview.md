@@ -1,108 +1,65 @@
 # Security: How Funds Are Protected
 
-Recuro uses multiple defense layers to protect subscriber funds.
+Recuro enforces payment safety with a Guard-program layer between keepers and token transfers.
 
-## Layer 1: Price immutability
+## Layer 1: Guard PDA as delegate
 
-Once a plan is deployed, the price and interval are **frozen forever** in the Plan PDA. Merchants cannot unilaterally change them.
+Subscribers approve a per-subscription **Guard PDA** as SPL delegate. The keeper never receives spending authority.
 
-**Protection**: Subscribers know exactly what they're paying. No surprise increases mid-subscription.
+**Protection**: spend authority is isolated to a PDA tied to one subscription.
 
-## Layer 2: Scoped SPL delegate
+## Layer 2: Immutable transfer parameters in Guard
 
-Instead of giving the keeper direct custody of subscriber funds, subscribers approve a **scoped SPL delegate**. The delegate can transfer only:
+At subscription creation, Recuro CPI-calls Guard `initialize_guard` and stores:
 
-- The exact plan amount
-- Once per billing cycle
-- From subscriber's USDC ATA to merchant's USDC ATA
+- `subscription`
+- `subscriber`
+- `merchant_receive`
+- `recuro_program`
+- `amount_per_period`
+- `period_seconds`
 
-**Example permission:**
+Callers cannot override these at payment time.
 
-```
-SPL Delegate:
-  Source: [Subscriber USDC ATA]
-  Delegated signer: [Subscription PDA]
-  Amount: 9.99 USDC
-  Auth: subscriber's signature
-```
+**Protection**: payment amount, destination, and billing cadence are locked in Guard state.
 
-**Protection**:
+## Layer 3: Guard authorization checks on every payment
 
-- If the Subscription PDA is compromised, blast radius is one payment (9.99 USDC).
-- Subscriber can revoke in Phantom at any time.
-- Cannot steal more than approved per cycle.
+Recuro `execute_payment` CPI-calls Guard `authorize_payment`. Guard enforces:
 
-## Layer 3: On-chain amount verification
+- caller must equal stored `recuro_program`
+- current time must be >= `last_executed_at + period_seconds`
+- destination ATA must equal `merchant_receive`
+- transfer amount is always Guard `amount_per_period`
 
-The `executePayment` instruction checks plan amount on-chain and enforces it in a CPIs (Cross-Program Invocation).
+**Protection**: blocks unauthorized callers, early charges, wrong destination, and caller-supplied amounts.
 
-```rust
-// On-chain, in execute_payment instruction
-let plan = account_loader::<Plan>(ctx, &subscription.plan)?;
+## Layer 4: Open keeper caller model
 
-// Verify amount matches
-require_eq!(subscription.amountUsdc, plan.amountUsdc,
-    error!("SubscriptionAmountMismatch"));
+Any keeper may call `execute_payment`, but keepers only trigger the flow; Guard and subscription constraints decide whether funds can move.
 
-// CPI to SPL token program
-token::transfer(ctx, plan.amountUsdc)?;
-```
+**Protection**: no single keeper bottleneck, while transfer safety remains on-chain.
 
-**Protection**: Program cannot deviate from immutable plan price. Math is enforced at runtime.
+## Layer 5: Fee path separation
 
-## Layer 4: Keeper address non-hardcoding
+Guard transfers merchant principal amount. Subscription program separately transfers protocol fee to treasury after Guard succeeds.
 
-The keeper address is **not hardcoded** in the program. Any account can call `executePayment()`.
+**Protection**: merchant payout path is guarded independently from protocol fee bookkeeping.
 
-**Why this is secure**:
+## Layer 6: Auto-expiry and failure handling
 
-- Prevents keeper DoS (hacker cannot block one keeper)
-- Enables redundancy (multiple keepers competing to execute)
-- Reduces trust in single operator
+If balance/delegate conditions fail repeatedly, failed count increments and auto-expiry triggers after threshold.
 
-**Tradeoff**: Keeper could theoretically be censored if a single operator dominates. Mitigation: run your own keeper or contract with multiple keeper providers.
+**Protection**: prevents indefinite retries on broken subscriptions and keeps state consistent.
 
-## Layer 5: Subscription PDA as SPL delegate
+## Recovery steps
 
-The SPL delegate is not the keeper keypair; it's the Subscription PDA account itself.
+If a subscriber wants to stop future payments immediately:
 
-**Why this matters**:
+1. Revoke token delegate approval in wallet.
+2. Cancel subscription on-chain.
 
-- Subscription cannot exist without valid program derivation
-- Prevents cross-subscription attacks
-- Ensures 1:1 mapping of subscription → delegate approval
-
-## Layer 6: Auto-expiry on repeated failures
-
-After 3 consecutive payment failures, the subscription auto-expires and subscriber rent is returned.
-
-**Protection**: Dead subscriptions don't become stuck zombie accounts draining merchant reputation or becoming targets for replay attacks.
-
-## Layer 7: Delegate revoke recovery
-
-If a delegate is compromised, subscriber can:
-
-1. Revoke SPL approval in Phantom
-2. Manually cancel subscription
-3. Resubscribe to a new plan with fresh approval
-
-**Recovery time**: < 1 minute. No customer service needed.
-
-## Keeper cannot steal funds
-
-Even if a keeper keypair is compromised:
-
-1. Keeper can only call `executePayment()` (no other instructions)
-2. `executePayment()` is constrained to exactly plan amount
-3. Amount is checked against immutable Plan account
-4. Transfer destination is subscription-linked merchant address
-
-**Worst case**: Keeper can execute _scheduled_ payments on time, not unscheduled ones. It cannot:
-
-- Transfer more than plan amount
-- Transfer to arbitrary address
-- Execute before scheduled time
-- Execute after cancellation
+This halts future Guard-authorized transfers.
 
 ---
 

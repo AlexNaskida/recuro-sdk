@@ -101,9 +101,9 @@ const sdk = new SubscriptionSdk(provider, {
 
 ## How It Works
 
-1. **Subscriber approves delegate** - Authorizes the subscription PDA to transfer up to 12 billing cycles
-2. **Subscription PDA created** - Locks in plan price and subscriber details on-chain
-3. **Keeper executes payments** - Off-chain bot validates timing and transfers USDC to merchant
+1. **Subscriber approves delegate** - Authorizes a per-subscription Guard PDA as delegate
+2. **Subscription + Guard initialized** - Recuro stores billing state and initializes Guard with fixed amount/period/destination
+3. **Keeper executes payments** - Off-chain bot calls `executePayment()`, which routes through Guard authorization before transfer
 
 Funds never leave the subscriber's wallet until payment time. Cancel anytime to immediately revoke delegate access.
 

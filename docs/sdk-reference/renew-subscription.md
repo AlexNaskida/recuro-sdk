@@ -1,10 +1,10 @@
 # renewSubscription()
 
-Renew an expired subscription by re-approving delegate authority.
+Renew an expired subscription by re-approving Guard delegate authority.
 
 ## Overview
 
-When a subscription expires, the subscriber can renew it to resume automatic payments. Renewal updates the existing subscription by re-approving delegate authority for future cycles.
+When a subscription expires, the subscriber can renew it to resume automatic payments. Renewal updates the existing subscription by re-approving Guard delegate authority for future cycles.
 
 ## Parameters
 
@@ -41,7 +41,7 @@ console.log("Tx:", signature);
 ## What happens
 
 1. Existing subscription is reactivated from expired state.
-2. SPL delegate approval is requested again in Phantom.
+2. Guard delegate approval is requested again in Phantom.
 3. Billing schedule resumes using subscription settings.
 4. Keeper resumes scheduled payment execution.
 

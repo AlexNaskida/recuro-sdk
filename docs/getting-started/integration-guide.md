@@ -104,6 +104,17 @@ export function SubscriptionPlans({ sdk, merchantWallet }: {
 
 ## Step 3: Subscribe from frontend (React example)
 
+When `createSubscription` runs, it now requires Guard accounts in addition to plan/subscription accounts. The SDK handles this internally, but if you build raw Anchor instruction calls you must pass:
+
+- `guardAccount` PDA with seeds `["guard", subscription_pubkey]` using Guard program ID
+- `guardProgram` (Recuro Guard program)
+- `merchantTokenAccount` and `subscriberTokenAccount` so Guard can be initialized correctly
+
+The subscription transaction does two important on-chain actions:
+
+1. Approves the Guard PDA as SPL delegate.
+2. CPI-calls Guard `initialize_guard(amount_per_period, period_seconds)`.
+
 Create a subscribe button component with proper error handling:
 
 ```typescript
