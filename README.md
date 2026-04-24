@@ -5,7 +5,7 @@
 [![npm version](https://img.shields.io/npm/v/@recuro/sdk.svg)](https://www.npmjs.com/package/@recuro/sdk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-Recuro enables automated USDC subscription payments without custodying subscriber funds. Subscribers approve a limited delegate - funds stay in their wallet until each payment executes on-chain.
+Recuro enables automated stablecoin subscription payments without custodying subscriber funds. Subscribers approve a limited delegate - funds stay in their wallet until each payment executes on-chain.
 
 ## Features
 
@@ -94,8 +94,10 @@ const subscriptions = await sdk.fetchSubscriberSubscriptions(userWallet);
 ```typescript
 const sdk = new SubscriptionSdk(provider, {
   cluster: "devnet", // "devnet" | "mainnet-beta" | "localnet"
+  stablecoin: "USDC", // Optional: "USDC" | "USDT" | "PYUSD"
+  stablecoinMint: "...", // Optional: explicit mint override
   programId: "...", // Optional: custom program address
-  usdcMint: "...", // Optional: custom USDC mint
+  usdcMint: "...", // Optional (legacy): custom stablecoin mint
 });
 ```
 

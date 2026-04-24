@@ -23,7 +23,7 @@ import {
   getAssociatedTokenAddress,
 } from "@solana/spl-token";
 import IDL from "./idl.json";
-import { LIMITS, PROGRAM_ID, USDC_MINT } from "./constants";
+import { LIMITS, PROGRAM_ID, STABLECOIN_MINTS } from "./constants";
 import { getPlanPDA, getSubscriptionPDA } from "./utils/pda";
 import { buildAnalytics } from "./utils/analytics";
 import { usdcToMicro } from "./utils/format";
@@ -37,6 +37,7 @@ import type {
   MerchantAnalytics,
   PlanAccount,
   SdkConfig,
+  StablecoinSymbol,
   SubscriptionAccount,
   UpdatePlanParams,
 } from "./types";
@@ -45,18 +46,32 @@ export class SubscriptionSdk {
   readonly provider: AnchorProvider;
   readonly program: Program & { account: any; methods: any };
   readonly usdcMint: PublicKey;
+  readonly stablecoin: StablecoinSymbol;
   readonly programId: PublicKey;
   readonly cluster: Cluster;
 
   constructor(provider: AnchorProvider, config: SdkConfig = {}) {
     this.provider = provider;
     this.cluster = config.cluster ?? "devnet";
+    this.stablecoin = config.stablecoin ?? "USDC";
     this.programId = config.programId
       ? new PublicKey(config.programId)
       : PROGRAM_ID;
-    this.usdcMint = config.usdcMint
-      ? new PublicKey(config.usdcMint)
-      : USDC_MINT[this.cluster];
+
+    const explicitMint = config.stablecoinMint ?? config.usdcMint;
+    const stablecoinMints = STABLECOIN_MINTS[this.stablecoin] as Partial<
+      Record<Cluster, PublicKey>
+    >;
+    const defaultMint = stablecoinMints[this.cluster];
+
+    if (!explicitMint && !defaultMint) {
+      throw new Error(
+        `No default ${this.stablecoin} mint configured for cluster ${this.cluster}. Pass stablecoinMint explicitly in SdkConfig.`,
+      );
+    }
+
+    this.usdcMint = new PublicKey(explicitMint ?? defaultMint!.toBase58());
+
     const idlWithAddress = {
       ...(IDL as Record<string, unknown>),
       address: this.programId.toBase58(),

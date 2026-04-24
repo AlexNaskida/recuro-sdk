@@ -2,6 +2,7 @@ import type { PublicKey } from "@solana/web3.js";
 import type BN from "bn.js";
 
 export type Cluster = "devnet" | "mainnet-beta" | "localnet";
+export type StablecoinSymbol = "USDC" | "USDT" | "PYUSD";
 
 // ── On-chain account shapes ──────────────────────────────────────────────────
 export interface PlanAccount {
@@ -192,6 +193,9 @@ export interface ExecutionLogEntry {
 export interface SdkConfig {
   cluster?: Cluster;
   programId?: string;
+  stablecoin?: StablecoinSymbol;
+  stablecoinMint?: string;
+  /** @deprecated Use stablecoinMint instead. */
   usdcMint?: string;
 }
 

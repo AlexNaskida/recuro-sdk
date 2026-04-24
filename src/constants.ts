@@ -6,13 +6,34 @@ export const PROGRAM_ID = new PublicKey(
 
 export const CLOCKWORK_THREAD_PROGRAM_ID = SystemProgram.programId; // unused placeholder
 
-/** USDC mint addresses */
-export const USDC_MINT = {
-  mainnet: new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
-  "mainnet-beta": new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
-  devnet: new PublicKey("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"),
-  localnet: new PublicKey("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"),
+export const SUPPORTED_STABLECOINS = ["USDC", "USDT", "PYUSD"] as const;
+
+/** Default stablecoin mint addresses by cluster */
+export const STABLECOIN_MINTS = {
+  USDC: {
+    mainnet: new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
+    "mainnet-beta": new PublicKey(
+      "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    ),
+    devnet: new PublicKey("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"),
+    localnet: new PublicKey("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"),
+  },
+  USDT: {
+    mainnet: new PublicKey("Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"),
+    "mainnet-beta": new PublicKey(
+      "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
+    ),
+  },
+  PYUSD: {
+    mainnet: new PublicKey("2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo"),
+    "mainnet-beta": new PublicKey(
+      "2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo",
+    ),
+  },
 } as const;
+
+/** Backward-compatible alias kept for existing imports */
+export const USDC_MINT = STABLECOIN_MINTS.USDC;
 
 /** PDA seed buffers - must match the Rust program */
 export const SEEDS = {
