@@ -1,6 +1,6 @@
 # Welcome to Recuro
 
-**Non-custodial recurring USDC subscriptions on Solana.**
+**Non-custodial recurring stablecoin subscriptions on Solana.**
 
 Subscribe once. Pay automatically.
 
