@@ -20,7 +20,6 @@ import {
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
   // createApproveInstruction,
-  getAssociatedTokenAddress,
 } from "@solana/spl-token";
 import IDL from "./idl.json";
 import { LIMITS, PROGRAM_ID, STABLECOIN_MINTS } from "./constants";
@@ -41,6 +40,16 @@ import type {
   SubscriptionAccount,
   UpdatePlanParams,
 } from "./types";
+
+function deriveAssociatedTokenAddress(
+  mint: PublicKey,
+  owner: PublicKey,
+): PublicKey {
+  return PublicKey.findProgramAddressSync(
+    [owner.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), mint.toBuffer()],
+    ASSOCIATED_TOKEN_PROGRAM_ID,
+  )[0];
+}
 
 export class SubscriptionSdk {
   readonly provider: AnchorProvider;
@@ -138,7 +147,7 @@ export class SubscriptionSdk {
       : new BN(params.planId);
 
     const [planPubkey] = getPlanPDA(merchant, planId, this.programId);
-    const merchantTokenAccount = await getAssociatedTokenAddress(
+    const merchantTokenAccount = deriveAssociatedTokenAddress(
       this.usdcMint,
       merchant,
     );
@@ -359,7 +368,7 @@ export class SubscriptionSdk {
     //   this.usdcMint,
     //   subscriber,
     // );
-    const subscriberTokenAccount = await getAssociatedTokenAddress(
+    const subscriberTokenAccount = deriveAssociatedTokenAddress(
       this.usdcMint,
       subscriber,
     );
@@ -510,7 +519,7 @@ export class SubscriptionSdk {
   ): Promise<{ signature: string; subscriptionPubkey: PublicKey }> {
     const subscriber = this.provider.wallet.publicKey;
 
-    const subscriberTokenAccount = await getAssociatedTokenAddress(
+    const subscriberTokenAccount = deriveAssociatedTokenAddress(
       this.usdcMint,
       subscriber,
     );
