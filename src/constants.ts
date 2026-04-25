@@ -1,5 +1,18 @@
 import { PublicKey, SystemProgram } from "@solana/web3.js";
 
+function readEnv(key: string): string | undefined {
+  const value = process.env[key];
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function readPublicKeyEnv(key: string): PublicKey | undefined {
+  const value = readEnv(key);
+  if (!value) return undefined;
+  return new PublicKey(value);
+}
+
 export const PROGRAM_ID = new PublicKey(
   "45WGwEH24Y9J6ZHYoKiGRET4t4xpu6ESiTeRdhRf9pfr",
 );
@@ -9,26 +22,45 @@ export const CLOCKWORK_THREAD_PROGRAM_ID = SystemProgram.programId; // unused pl
 export const SUPPORTED_STABLECOINS = ["USDC", "USDT", "PYUSD"] as const;
 
 /** Default stablecoin mint addresses by cluster */
+const usdtDevnetMint = readPublicKeyEnv("RECURO_USDT_MINT_DEVNET");
+const pyusdDevnetMint = readPublicKeyEnv("RECURO_PYUSD_MINT_DEVNET");
+
 export const STABLECOIN_MINTS = {
   USDC: {
-    mainnet: new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
-    "mainnet-beta": new PublicKey(
-      "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-    ),
-    devnet: new PublicKey("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"),
-    localnet: new PublicKey("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"),
+    mainnet:
+      readPublicKeyEnv("RECURO_USDC_MINT_MAINNET") ??
+      new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
+    "mainnet-beta":
+      readPublicKeyEnv("RECURO_USDC_MINT_MAINNET_BETA") ??
+      new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
+    devnet:
+      readPublicKeyEnv("RECURO_USDC_MINT_DEVNET") ??
+      new PublicKey("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"),
+    localnet:
+      readPublicKeyEnv("RECURO_USDC_MINT_LOCALNET") ??
+      new PublicKey("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"),
   },
   USDT: {
-    mainnet: new PublicKey("Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"),
-    "mainnet-beta": new PublicKey(
-      "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
-    ),
+    mainnet:
+      readPublicKeyEnv("RECURO_USDT_MINT_MAINNET") ??
+      new PublicKey("Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"),
+    "mainnet-beta":
+      readPublicKeyEnv("RECURO_USDT_MINT_MAINNET_BETA") ??
+      new PublicKey("Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"),
+    ...(usdtDevnetMint
+      ? { devnet: usdtDevnetMint, localnet: usdtDevnetMint }
+      : {}),
   },
   PYUSD: {
-    mainnet: new PublicKey("2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo"),
-    "mainnet-beta": new PublicKey(
-      "2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo",
-    ),
+    mainnet:
+      readPublicKeyEnv("RECURO_PYUSD_MINT_MAINNET") ??
+      new PublicKey("2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo"),
+    "mainnet-beta":
+      readPublicKeyEnv("RECURO_PYUSD_MINT_MAINNET_BETA") ??
+      new PublicKey("2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo"),
+    ...(pyusdDevnetMint
+      ? { devnet: pyusdDevnetMint, localnet: pyusdDevnetMint }
+      : {}),
   },
 } as const;
 
