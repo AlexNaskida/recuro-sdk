@@ -119,19 +119,13 @@ const dueSubscriptions = allSubscriptions.filter(
 - ✅ Payment schedule stays on the original billing cycle (doesn't drift)
 - ✅ Subscribers are charged for the correct number of cycles
 
-## Keeper Incentivization (Future Roadmap)
+## Keeper Incentivization (Live)
 
-**Current status (v1):** Keepers are **permissionless and unrewarded**. Anyone can run a keeper, but there's no on-chain incentive beyond:
+**Status: Active and live on devnet** ✅
 
-- Merchants ensuring their own subscription payments execute reliably
-- Protocol supporters running keepers altruistically
-- Developers testing or building on the platform
+Keepers earn rewards for successfully executing subscription payments through a 60/40 fee split.
 
-### Planned v2: On-Chain Keeper Rewards
-
-The planned incentivization model will reward keepers for successfully executing valid subscription payments.
-
-#### How It Will Work
+### How It Works
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
@@ -139,49 +133,77 @@ The planned incentivization model will reward keepers for successfully executing
 ├──────────────────────────────────────────────────────────────┤
 │                                                              │
 │  1. Keeper detects due subscription                          │
-│  2. Keeper calls executePayment()                            │
-│  3. On-chain program verifies:                               │
+│  2. Keeper provides their USDC ATA in the transaction        │
+│  3. Keeper calls executePayment()                            │
+│  4. On-chain program verifies:                               │
 │     - Subscription is active                                 │
 │     - Payment is actually due (nextPaymentAt <= now)         │
 │     - Subscriber has sufficient USDC balance                 │
-│  4. If valid → Payment executes + Keeper receives reward     │
-│  5. If invalid → Transaction fails, no reward paid           │
+│     - Keeper's ATA is owned by keeper signer                 │
+│  5. If valid → Payment executes + Fee split happens:         │
+│     - 60% of fee → Keeper's wallet                           │
+│     - 40% of fee → Protocol treasury                         │
+│  6. If invalid → Transaction fails, no reward paid           │
 │                                                              │
 └──────────────────────────────────────────────────────────────┘
 ```
 
-#### Reward Structure (Proposed)
+### Reward Structure
 
-| Component            | Details                                                   |
-| -------------------- | --------------------------------------------------------- |
-| **Reward amount**    | 0.1% of payment OR fixed 0.01 USDC (whichever is greater) |
-| **Source**           | Protocol treasury (not deducted from merchant/subscriber) |
-| **Distribution**     | Instant, same transaction as payment                      |
-| **Winner selection** | First valid execution wins (race-based)                   |
+| Component            | Details                                               |
+| -------------------- | ----------------------------------------------------- |
+| **Keeper reward**    | 60% of payment fee                                    |
+| **Treasury cut**     | 40% of payment fee                                    |
+| **Source**           | Deducted from total subscriber fee (not extra burden) |
+| **Distribution**     | Instant, same transaction as payment                  |
+| **Winner selection** | First valid execution wins (race-based)               |
 
-#### Security Considerations
+### Keeper Account Security
+
+**Keeper Identity Verification:**
+
+- Keeper is the **signer** of the transaction (their keypair signs it)
+- Keeper provides their own **USDC token account** (ATA) to receive rewards
+- On-chain constraint verifies: `keeper_token_account.owner == keeper.key()`
+- This prevents a malicious keeper from trying to send rewards to a different wallet
+
+### Security Considerations
 
 - **Spam prevention**: Rewards only paid for valid executions that actually transfer funds
 - **No fake subscriptions**: Can't create fake subscriptions to farm rewards (requires real USDC flow)
 - **Rate limiting**: Natural rate limit - can only execute each subscription once per billing cycle
 - **Sybil resistance**: Running multiple keepers doesn't increase rewards (same payment, same reward)
+- **Account verification**: Keeper rewards go only to the wallet that signed the transaction
 
-#### Why Not Included in v1
+### Economics Example
 
-1. **Simplicity**: Keeps the protocol auditable and easy to understand
-2. **Bootstrapping**: Allows organic growth before adding financial incentives
-3. **Volume threshold**: Incentives make sense when there's sufficient payment volume
-4. **Community feedback**: Gathering input on optimal reward structure
+**Monthly subscription ($100):**
 
-#### Timeline
+```
+Fee rate:        0.25% (25 basis points)
+Total fee:       $0.25
+  ├─ Keeper:     $0.15 (60%)
+  └─ Treasury:   $0.10 (40%)
 
-Keeper incentivization will be introduced once:
+Gas cost:        ~$0.0006 SOL (~0.02 cents)
+Keeper profit:   $0.15 - $0.0006 = ~$0.149 per payment
+```
 
-- Protocol reaches meaningful subscription volume
-- Community consensus on reward structure is achieved
-- Smart contract is audited with incentive logic
+**Annual volume (1000 subscriptions):**
 
-**Want to run a keeper now?** Merchants are encouraged to run their own keepers for guaranteed payment reliability. See [Running Your Own Keeper](./running-your-own.md).
+```
+Total keeper earnings: $0.15 × 1000 = $150/month = $1,800/year
+```
+
+### Running a Keeper Now
+
+Keepers can start earning immediately by:
+
+1. Running the keeper bot
+2. Providing their USDC ATA on each `executePayment()` call
+3. Receiving 60% of fees directly to their wallet
+
+See [Running Your Own Keeper](./running-your-own.md) to get started.
 
 ## Setting up multiple keepers
 

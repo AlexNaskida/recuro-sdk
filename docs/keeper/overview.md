@@ -47,29 +47,41 @@ The keeper signs transactions with its own keypair. It does **NOT** need access 
 
 ## Cost and rewards
 
-### Current Model (v1)
+### Current Model (Incentivized)
 
-| Item             | Details                                                  |
-| ---------------- | -------------------------------------------------------- |
-| **Gas cost**     | Minimal (~0.001 SOL per payment, a fraction of a cent)   |
-| **Rewards**      | None in v1 - keepers operate without on-chain incentives |
-| **Who pays gas** | Keeper pays                                              |
+| Item              | Details                                                   |
+| ----------------- | --------------------------------------------------------- |
+| **Gas cost**      | ~0.001 SOL per payment (paid by keeper)                   |
+| **Keeper reward** | **60% of payment fee** - paid directly to keeper's wallet |
+| **Treasury**      | **40% of payment fee** - goes to protocol treasury        |
+| **Example**       | On a 0.25% fee: keeper earns 15 bps, treasury gets 10 bps |
 
-### Who Should Run a Keeper (v1)
+### How Keeper Rewards Work
 
-- **Merchants**: Run your own keeper to ensure your subscriptions always execute on time
-- **Protocol supporters**: Help the network by running altruistic keepers
-- **Developers**: Test integrations and understand the payment flow
+**Fee Split Structure:**
 
-### Future Incentivization (v2 Roadmap)
+```
+Subscriber pays:    plan_amount + fee
+  ↓
+plan_amount → Merchant (full advertised price)
+fee (60%) → Keeper (execution incentive)
+fee (40%) → Treasury (protocol revenue)
+```
 
-On-chain keeper rewards are planned for v2, where keepers will earn a small fee for each successful payment execution:
+**Example (Monthly Subscription):**
 
-- **Reward**: ~0.1% of payment amount or fixed minimum
-- **Source**: Protocol treasury (not deducted from merchants/subscribers)
-- **Distribution**: Race-based - first valid execution wins
+- Subscription amount: $100
+- Fee rate: 0.25% (25 basis points)
+- Total fee: $0.25
+  - Keeper earns: $0.15 (60%)
+  - Treasury gets: $0.10 (40%)
 
-See [Multiple Keepers](./multiple-keepers.md#keeper-incentivization-future-roadmap) for full details on the incentivization roadmap.
+### Who Should Run a Keeper
+
+- **Professional operators**: Run keepers as a service and earn transaction fees
+- **Merchants**: Run your own keeper to ensure reliable payment execution + earn fees
+- **Protocol supporters**: Help the network while earning rewards
+- **Developers**: Understand the payment flow and earn fees during testing
 
 ## Reliability
 

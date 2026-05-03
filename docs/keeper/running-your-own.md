@@ -29,6 +29,29 @@ solana transfer <your-wallet> keeper-keypair.json 0.1 --url devnet
 solana balance keeper-keypair.json --url devnet
 ```
 
+## Step 2b: Create USDC token account (for earning keeper rewards)
+
+Keepers earn **60% of payment fees** for each execution. You need a USDC token account to receive these rewards.
+
+```bash
+# Create a USDC ATA for your keeper (on devnet, using devUSDC)
+DEV_USDC_MINT=EPjFWaLb3odccxX7VRdL5SVgejAoj3zKYDp4g4vrvkX
+
+spl-token create-account $DEV_USDC_MINT --owner keeper-keypair.json --url devnet
+
+# Example output:
+# Creating account 9zQoQUZmC6SqYnU1wfGaCGdGm3c4xfkYKS7jShFjU5JR
+# Token account: 9zQoQUZmC6SqYnU1wfGaCGdGm3c4xfkYKS7jShFjU5JR
+
+# Save this address - you'll need it when running the keeper
+```
+
+**Earning Rewards:**
+
+- Each time your keeper executes a payment, **60% of the subscription fee** is transferred to your USDC ATA
+- Example: On a 0.25% fee for a $100 subscription, your keeper earns $0.15
+- Rewards are paid instantly in the same transaction
+
 ## Step 3: Configure environment
 
 Create a `.env.local` file in the project root:
@@ -38,6 +61,7 @@ Create a `.env.local` file in the project root:
 SOLANA_CLUSTER=devnet
 SOLANA_RPC_URL=https://api.devnet.solana.com
 KEEPER_KEYPAIR_PATH=/path/to/keeper-keypair.json
+KEEPER_TOKEN_ACCOUNT=9zQoQUZmC6SqYnU1wfGaCGdGm3c4xfkYKS7jShFjU5JR  # Your USDC ATA (from Step 2b)
 
 # Optional
 POLL_INTERVAL_MS=30000        # How often to check for payments (default: 30s)
@@ -58,11 +82,13 @@ Expected output:
 [INFO] RPC: https://api.devnet.solana.com
 [INFO] Cluster: devnet
 [INFO] Keypair: keeper-keypair.json
+[INFO] Token account: 9zQoQUZmC6SqYnU1wfGaCGdGm3c4xfkYKS7jShFjU5JR
 [INFO] Poll interval: 30000ms
 [INFO] Poll cycle 1: Checking subscriptions...
 [INFO] Active subscriptions: 42
 [INFO] Subscriptions due for payment: 3
 [INFO] Executed 2 payments, 1 failed (reason: InsufficientFunds)
+[INFO] Earned $0.30 in keeper rewards this cycle
 ```
 
 ## Step 5 (Production): Deploy to Railway
@@ -77,6 +103,7 @@ Railway is a simple way to run keepers without managing infrastructure.
 SOLANA_CLUSTER=mainnet-beta
 SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
 KEEPER_KEYPAIR_PATH=/path/or/base64-encoded-keypair
+KEEPER_TOKEN_ACCOUNT=<your-mainnet-usdc-ata>
 
 # 3. Set start command:
 yarn && node thread/keeper.mjs
