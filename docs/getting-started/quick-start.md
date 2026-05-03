@@ -2,6 +2,15 @@
 
 Subscribe to a plan and manage your subscription in under 5 minutes.
 
+## Prerequisites
+
+- A Solana wallet such as Phantom or Solflare
+- A React app or a script that can provide an Anchor wallet object
+- Devnet SOL for fees while testing
+- Devnet USDC if you want to test the full payment flow
+
+If you're using React, you also need `@solana/wallet-adapter-react` so the SDK can read the connected wallet.
+
 ## 1. Install the SDK
 
 ```bash
@@ -11,10 +20,15 @@ npm install @recuro/sdk
 
 ## 2. Initialize the SDK
 
+If you're in React, get `wallet` from `useWallet()`. If you're in a script or backend, pass any Anchor-compatible wallet object.
+
 ```typescript
 import { AnchorProvider } from "@coral-xyz/anchor";
 import { SubscriptionSdk } from "@recuro/sdk";
 import { Connection, PublicKey, clusterApiUrl } from "@solana/web3.js";
+
+// React example:
+// const { wallet } = useWallet();
 
 const connection = new Connection(clusterApiUrl("devnet"));
 const provider = new AnchorProvider(connection, wallet, {
@@ -80,6 +94,10 @@ console.log("✓ Subscription resumed");
 await sdk.cancelSubscription(subscriptionPubkey);
 console.log("✓ Subscription cancelled - delegate revoked");
 ```
+
+## Trial period note
+
+If the merchant enabled a trial period, the first payment is delayed until the trial ends. After that, the normal billing interval starts.
 
 ## What just happened
 

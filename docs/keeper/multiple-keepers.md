@@ -129,7 +129,7 @@ Keepers earn rewards for successfully executing subscription payments through a 
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                    Payment Execution Flow                     │
+│                    Payment Execution Flow                    │
 ├──────────────────────────────────────────────────────────────┤
 │                                                              │
 │  1. Keeper detects due subscription                          │

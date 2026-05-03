@@ -1,5 +1,13 @@
 # How It Works
 
+## Terminology
+
+- **Plan**: A merchant-created subscription template stored on-chain.
+- **Subscription**: A subscriber's active agreement to a plan.
+- **Guard PDA**: The on-chain account that enforces payment rules.
+- **SPL delegate**: Permission for Guard to move only the approved amount from the subscriber's token account.
+- **Merchant receive token account**: The USDC account that receives the plan amount.
+
 ## Subscriber Journey
 
 | Step             | What Happens                               | Your Control |

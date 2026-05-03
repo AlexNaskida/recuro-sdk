@@ -4,6 +4,27 @@ Complete walkthrough to integrate Recuro subscription management into your app.
 
 This guide focuses on **customer-facing subscription management** - the primary use case for the SDK. For information about plan creation, see the [Merchant Overview](../for-merchants/overview.md).
 
+## React wallet setup
+
+If you're building in React, wrap your app with a wallet provider before using `useWallet()`:
+
+```typescript
+import { WalletProvider } from "@solana/wallet-adapter-react";
+import { PhantomWalletAdapter } from "@solana/wallet-adapter-phantom";
+
+const wallets = [new PhantomWalletAdapter()];
+
+export function AppProviders({ children }: { children: React.ReactNode }) {
+  return (
+    <WalletProvider wallets={wallets} autoConnect>
+      {children}
+    </WalletProvider>
+  );
+}
+```
+
+Without this wrapper, the `useWallet()` example below will not work.
+
 ## Prerequisites
 
 - Node.js 18+ or React/Next.js app

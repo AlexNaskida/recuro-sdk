@@ -4,6 +4,18 @@
 
 This guide helps merchants understand how to use the Recuro SDK effectively.
 
+## Critical: you need a keeper
+
+Creating subscriptions is not enough by itself. A keeper must run and call `executePayment()` when a subscription is due, otherwise payments will stay queued at `nextPaymentAt`.
+
+You have three options:
+
+1. Run your own keeper for full control.
+2. Use a keeper operator for redundancy.
+3. Ask your platform or backend team to host one.
+
+Keepers are incentivized on-chain: 60% of the payment fee goes to the keeper that executes the payment first, and 40% goes to the protocol treasury.
+
 ## Primary Focus: Subscription Management
 
 **The Recuro SDK is designed for customer-facing subscription management.** This means your integration will focus on:
@@ -21,6 +33,17 @@ This guide helps merchants understand how to use the Recuro SDK effectively.
 | Analytics          | Revenue, churn, and subscriber metrics | `getAnalytics()`                 |
 
 **This is the recommended integration approach** - and what 90% of the SDK documentation covers.
+
+## What Guard does
+
+When a subscriber signs up, Recuro creates a Guard PDA for that subscription. Guard enforces the payment rules on-chain:
+
+- the amount per payment
+- the billing interval
+- the merchant receive token account
+- the payment timing
+
+You do not integrate Guard directly in your app. The SDK handles it during `createSubscription()` and `executePayment()`.
 
 ## About Plan Management
 
