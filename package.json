@@ -70,10 +70,11 @@
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.0",
-    "@privy-io/react-auth": "^3.22.2",
-    "@solana/wallet-adapter-wallets": "^0.16.9",
+    "@privy-io/react-auth": "^1.28.2",
+    "@solana/wallet-adapter-solflare": "0.6.3",
+    "@solana/wallet-adapter-wallets": "^0.16.1",
     "bn.js": "^5.2.1",
-    "mocha": "11.7.5",
-    "next": "16.2.4"
+    "mocha": "^11.3.0",
+    "next": "^9.3.3"
   }
 }
