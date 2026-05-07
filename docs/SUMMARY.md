@@ -2,6 +2,7 @@
 
 - [Welcome to Recuro](README.md)
 - [Why Recuro](why-recuro.md)
+- [Core Concepts](concepts.md)
 
 ## Getting Started
 
@@ -12,8 +13,12 @@
 ## For Merchants
 
 - [Merchant Integration Overview](for-merchants/overview.md)
+- [QVAC AI Assistant](for-merchants/qvac-assistant.md)
 
 ## SDK Reference
+
+- [Types](types.md)
+- [Errors](errors.md)
 
 ### Subscription Management
 
@@ -34,6 +39,18 @@
 - [Unarchive a Plan](sdk-reference/unarchive-plan.md)
 - [Delete a Plan](sdk-reference/delete-plan.md)
 
+## Recipes
+
+- [All recipes](recipes/README.md)
+- [Show next payment date](recipes/next-payment-date.md)
+- [Detect a failed payment](recipes/detect-failed-payment.md)
+- [Migrate subscribers off an old plan](recipes/migrate-plan.md)
+- [List all subscribers for a plan](recipes/list-subscribers.md)
+- [Build a manage-subscription page](recipes/manage-subscription-page.md)
+- [Sync events to your database](recipes/sync-events-to-db.md)
+- [Charge a subscriber off-cycle](recipes/charge-now.md)
+- [Compute MRR](recipes/compute-mrr.md)
+
 ## Keeper (Payment Execution)
 
 - [Overview](keeper/overview.md)
@@ -44,3 +61,8 @@
 
 - [How Funds Are Protected](security/overview.md)
 - [Keeper Security Model](security/keeper-security.md)
+
+## Reference
+
+- [Troubleshooting & FAQ](troubleshooting.md)
+- [Changelog](../CHANGELOG.md)

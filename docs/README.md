@@ -24,8 +24,16 @@ Recuro enables users to manage recurring stablecoin payments that are controlled
 ## Get started
 
 - [**Quick Start**](./getting-started/quick-start.md) - Subscribe to your first plan in 5 minutes
+- [**Core Concepts**](./concepts.md) - Architecture, PDAs, and the lifecycle of one payment
 - [**Why Recuro**](./why-recuro.md) - See how we're different from competitors
 - [**Integration Guide**](./getting-started/integration-guide.md) - Full walkthrough with React examples
+
+## Reference
+
+- [**Types**](./types.md) — every exported type, interface, and enum
+- [**Errors**](./errors.md) — every error code, what triggers it, how to fix
+- [**Recipes**](./recipes/README.md) — copy-pasteable how-tos for common tasks
+- [**Troubleshooting**](./troubleshooting.md) — FAQ for the issues people hit first
 
 ## Install now
 
