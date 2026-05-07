@@ -13,18 +13,18 @@ Plan prices are immutable. To "raise the price" or change the interval, create a
 6. Once all old subscribers have churned, deletePlan on the old one
 ```
 
-## Step 1 — Create the new plan
+## Step 1 - Create the new plan
 
 ```typescript
 const { planPubkey: newPlanPubkey } = await sdk.createPlan({
   planId: Date.now(),
   name: "Pro Monthly (2026)",
-  amountUsdc: 14.99,        // new price
+  amountUsdc: 14.99, // new price
   intervalDays: 30,
 });
 ```
 
-## Step 2 — Archive the old plan
+## Step 2 - Archive the old plan
 
 ```typescript
 await sdk.archivePlan({ planPubkey: oldPlanPubkey });
@@ -32,7 +32,7 @@ await sdk.archivePlan({ planPubkey: oldPlanPubkey });
 
 This stops new subscribers but **does not affect existing subscriptions**. Existing subscribers continue at the old price.
 
-## Step 3 — Find affected subscribers
+## Step 3 - Find affected subscribers
 
 ```typescript
 const oldSubs = await sdk.fetchPlanSubscriptions(oldPlanPubkey);
@@ -44,27 +44,31 @@ for (const sub of active) {
 }
 ```
 
-## Step 4 — Make the new plan easy to switch to
+## Step 4 - Make the new plan easy to switch to
 
 In your UI, on the user's "manage subscription" page, when the plan they're on is archived, surface a CTA:
 
 ```tsx
-{plan.status === "Archived" && (
-  <UpgradeCard
-    newPlanPubkey={newPlanPubkey}
-    onSwitch={async () => {
-      await sdk.cancelSubscription(currentSub.publicKey);
-      await sdk.createSubscription({ planPubkey: newPlanPubkey });
-    }}
-  />
-)}
+{
+  plan.status === "Archived" && (
+    <UpgradeCard
+      newPlanPubkey={newPlanPubkey}
+      onSwitch={async () => {
+        await sdk.cancelSubscription(currentSub.publicKey);
+        await sdk.createSubscription({ planPubkey: newPlanPubkey });
+      }}
+    />
+  );
+}
 ```
 
-## Step 5 — Delete the old plan when empty
+## Step 5 - Delete the old plan when empty
 
 ```typescript
 const remaining = await sdk.fetchPlanSubscriptions(oldPlanPubkey);
-const stillActive = remaining.filter((s) => s.status === "Active" || s.status === "Paused");
+const stillActive = remaining.filter(
+  (s) => s.status === "Active" || s.status === "Paused",
+);
 
 if (stillActive.length === 0) {
   await sdk.deletePlan({ planPubkey: oldPlanPubkey });

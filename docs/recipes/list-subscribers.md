@@ -25,8 +25,8 @@ const grouped = subs.reduce<Record<string, SubscriptionAccount[]>>((acc, s) => {
 ## Sort by total revenue contribution
 
 ```typescript
-const ranked = [...subs].sort((a, b) =>
-  b.totalPaid.toNumber() - a.totalPaid.toNumber(),
+const ranked = [...subs].sort(
+  (a, b) => b.totalPaid.toNumber() - a.totalPaid.toNumber(),
 );
 
 for (const sub of ranked.slice(0, 10)) {
@@ -80,5 +80,5 @@ function SubscribersTable({ planPubkey }: { planPubkey: PublicKey }) {
 `fetchPlanSubscriptions` uses `getProgramAccounts`. On a public RPC this can be slow at scale (>1k subscribers). Strategies:
 
 - Cache server-side and serve from your own DB (use `onSubscriptionCreated` / `onSubscriptionCancelled` listeners to keep it fresh).
-- Switch to a paid RPC (Helius, QuickNode, Triton) — they have indexed `getProgramAccounts`.
+- Switch to a paid RPC (Helius, QuickNode, Triton) - they have indexed `getProgramAccounts`.
 - Paginate UI display so the user doesn't wait for 5k rows on every load.

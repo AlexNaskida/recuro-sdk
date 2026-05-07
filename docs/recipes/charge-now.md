@@ -1,6 +1,6 @@
 # Charge a subscriber immediately (off-cycle)
 
-Sometimes a merchant wants to charge a subscriber outside the normal billing cycle — e.g. a one-time add-on, a usage overage, or a manual catch-up after a fix.
+Sometimes a merchant wants to charge a subscriber outside the normal billing cycle - e.g. a one-time add-on, a usage overage, or a manual catch-up after a fix.
 
 > **Important**: this still goes through Guard. The amount is the plan amount; you can't override it. For variable charges, use a separate one-shot transfer flow, not Recuro.
 
@@ -17,13 +17,13 @@ const signature = await sdk.chargeNow({ subscriptionPubkey });
 console.log("Charged off-cycle:", signature);
 ```
 
-This calls the program's `charge_now` instruction, which routes through Guard exactly like a keeper-triggered payment — Guard still enforces every constraint.
+This calls the program's `charge_now` instruction, which routes through Guard exactly like a keeper-triggered payment - Guard still enforces every constraint.
 
 ## Caveats
 
 - Only the **merchant** or the **subscriber themselves** can call this; arbitrary keepers can't.
 - The amount is fixed at the plan amount. No partial charges.
-- Subsequent automated payments still follow the original interval — `nextPaymentAt` advances by `intervalSeconds` from the charge-now timestamp.
+- Subsequent automated payments still follow the original interval - `nextPaymentAt` advances by `intervalSeconds` from the charge-now timestamp.
 
 ## React example
 

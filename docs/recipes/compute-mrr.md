@@ -1,10 +1,10 @@
 # Compute MRR from on-chain accounts
 
-Calculate Monthly Recurring Revenue (MRR) without `getAnalytics()` — useful when you want a custom slice (e.g. MRR for a single plan, MRR by cohort).
+Calculate Monthly Recurring Revenue (MRR) without `getAnalytics()` - useful when you want a custom slice (e.g. MRR for a single plan, MRR by cohort).
 
 ## Definition
 
-MRR = sum, across all *active* subscriptions, of the monthly-equivalent revenue from each.
+MRR = sum, across all _active_ subscriptions, of the monthly-equivalent revenue from each.
 
 A subscription billed every `intervalSeconds` at `amountUsdc` contributes:
 
@@ -55,6 +55,7 @@ const planMrr = active * monthlyEquiv;
 ```
 
 ### MRR excluding paused subscriptions
+
 Already done above (`status === "Active"` only). Paused don't bill.
 
 ### ARR (Annual Recurring Revenue)
@@ -66,12 +67,13 @@ const arr = mrr * 12;
 ### MRR delta this month
 
 ```typescript
-const newSubs = subs.filter((s) =>
-  s.startedAt.toNumber() * 1000 > Date.now() - 30 * 86_400_000
+const newSubs = subs.filter(
+  (s) => s.startedAt.toNumber() * 1000 > Date.now() - 30 * 86_400_000,
 );
-const churnedSubs = subs.filter((s) =>
-  (s.status === "Cancelled" || s.status === "Expired") &&
-  s.endedAt.toNumber() * 1000 > Date.now() - 30 * 86_400_000
+const churnedSubs = subs.filter(
+  (s) =>
+    (s.status === "Cancelled" || s.status === "Expired") &&
+    s.endedAt.toNumber() * 1000 > Date.now() - 30 * 86_400_000,
 );
 
 const newMrr = newSubs.length * monthlyEquiv;

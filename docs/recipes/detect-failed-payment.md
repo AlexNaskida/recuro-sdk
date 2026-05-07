@@ -27,7 +27,7 @@ If you can't keep a long-lived listener (e.g. a serverless cron):
 const sub = await sdk.fetchSubscription(subscriptionPubkey);
 
 if (sub.consecutiveFailures > 0) {
-  // Last attempt failed — but we have grace period before auto-expire
+  // Last attempt failed - but we have grace period before auto-expire
   const failsLeft = 3 - sub.consecutiveFailures;
   return {
     state: "at_risk",
@@ -39,21 +39,23 @@ if (sub.consecutiveFailures > 0) {
 
 ## Common failure reasons
 
-| `event.reason`      | What it means                                      | What the user should do                    |
-| ------------------- | -------------------------------------------------- | ------------------------------------------ |
-| `InsufficientFunds` | USDC ATA balance < amount.                         | Top up USDC, then wait for the next retry. |
-| `DelegateRevoked`   | User revoked the SPL approval.                     | Re-create the subscription.                |
-| `Other`             | Misc failure (mint mismatch, ATA closed, etc.).    | Check transaction logs.                    |
+| `event.reason`      | What it means                                   | What the user should do                    |
+| ------------------- | ----------------------------------------------- | ------------------------------------------ |
+| `InsufficientFunds` | USDC ATA balance < amount.                      | Top up USDC, then wait for the next retry. |
+| `DelegateRevoked`   | User revoked the SPL approval.                  | Re-create the subscription.                |
+| `Other`             | Misc failure (mint mismatch, ATA closed, etc.). | Check transaction logs.                    |
 
 ## Auto-expiry warning
 
 After **3 consecutive failures**, the subscription auto-expires. Surface a warning UI starting at `consecutiveFailures === 1` so the user has a chance to recover.
 
 ```tsx
-{sub.consecutiveFailures > 0 && (
-  <Alert variant="warning">
-    Last payment failed. {3 - sub.consecutiveFailures} attempts remain
-    before this subscription expires.
-  </Alert>
-)}
+{
+  sub.consecutiveFailures > 0 && (
+    <Alert variant="warning">
+      Last payment failed. {3 - sub.consecutiveFailures} attempts remain before
+      this subscription expires.
+    </Alert>
+  );
+}
 ```

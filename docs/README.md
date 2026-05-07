@@ -30,10 +30,10 @@ Recuro enables users to manage recurring stablecoin payments that are controlled
 
 ## Reference
 
-- [**Types**](./types.md) — every exported type, interface, and enum
-- [**Errors**](./errors.md) — every error code, what triggers it, how to fix
-- [**Recipes**](./recipes/README.md) — copy-pasteable how-tos for common tasks
-- [**Troubleshooting**](./troubleshooting.md) — FAQ for the issues people hit first
+- [**Types**](./types.md) - every exported type, interface, and enum
+- [**Errors**](./errors.md) - every error code, what triggers it, how to fix
+- [**Recipes**](./recipes/README.md) - copy-pasteable how-tos for common tasks
+- [**Troubleshooting**](./troubleshooting.md) - FAQ for the issues people hit first
 
 ## Install now
 
