@@ -1,16 +1,6 @@
 # QVAC AI Assistant (Merchant Dashboard)
 
-The merchant dashboard ships with a **local-first AI assistant** that helps you analyze, plan, and operate your subscription business through natural conversation.
-
-## Why local-first
-
-The assistant runs against a **QVAC runtime on `http://localhost:11434/v1`**. No merchant data ever leaves your machine. Your plans, subscribers, revenue figures, and the conversation history itself stay on your computer.
-
-That means:
-
-- 🛡️ **No PII leakage** - subscriber wallets, revenue figures, churn metrics never hit a third-party API.
-- ⚡ **No rate limits** - query as often as you want, answers are bounded only by your local hardware.
-- 💸 **No per-token billing** - the model runs on your machine.
+The merchant dashboard ships with a **QVAC AI assistant** that helps you analyze, plan, and operate your subscription business through natural conversation.
 
 ## What you can do
 
