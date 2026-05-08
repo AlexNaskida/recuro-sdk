@@ -2,6 +2,8 @@
 
 A single page that explains the moving parts of Recuro and how they fit together. Read this once and the rest of the SDK will feel obvious.
 
+![Recuro architecture — on-chain and off-chain components](./images/architecture.png)
+
 ## The four on-chain accounts
 
 ```

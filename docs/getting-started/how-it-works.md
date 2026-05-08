@@ -1,5 +1,7 @@
 # How It Works
 
+![Recuro architecture — on-chain and off-chain components](../images/architecture.png)
+
 ## Terminology
 
 - **Plan**: A merchant-created subscription template stored on-chain.
