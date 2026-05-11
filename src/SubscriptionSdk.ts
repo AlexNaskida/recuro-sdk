@@ -42,10 +42,6 @@ import type {
   UpdatePlanParams,
 } from "./types";
 
-const GUARD_PROGRAM_ID = new PublicKey(
-  "4Fgs3dSAP869uEwsTd1tyh2pTkvLK1ji2BAhmfbBzCDr",
-);
-
 function deriveAssociatedTokenAddress(
   mint: PublicKey,
   owner: PublicKey,
