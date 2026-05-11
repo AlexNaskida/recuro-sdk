@@ -7,17 +7,17 @@ import { PROGRAM_ID, CLOCKWORK_THREAD_PROGRAM_ID, SEEDS } from "../constants";
  * Seeds: ["plan", merchant, planId_le_bytes_8]
  */
 export function getPlanPDA(
-  merchant:  PublicKey,
-  planId:    number | BN,
-  programId: PublicKey = PROGRAM_ID
+  merchant: PublicKey,
+  planId: number | BN,
+  programId: PublicKey = PROGRAM_ID,
 ): [PublicKey, number] {
-  const idBn  = BN.isBN(planId) ? planId : new BN(planId);
+  const idBn = BN.isBN(planId) ? planId : new BN(planId);
   const idBuf = Buffer.alloc(8);
   idBuf.writeBigUInt64LE(BigInt(idBn.toString()));
 
   return PublicKey.findProgramAddressSync(
     [SEEDS.PLAN, merchant.toBuffer(), idBuf],
-    programId
+    programId,
   );
 }
 
@@ -26,13 +26,27 @@ export function getPlanPDA(
  * Seeds: ["subscription", plan, subscriber]
  */
 export function getSubscriptionPDA(
-  plan:       PublicKey,
+  plan: PublicKey,
   subscriber: PublicKey,
-  programId:  PublicKey = PROGRAM_ID
+  programId: PublicKey = PROGRAM_ID,
 ): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [SEEDS.SUBSCRIPTION, plan.toBuffer(), subscriber.toBuffer()],
-    programId
+    programId,
+  );
+}
+
+/**
+ * Derive the Guard PDA for a subscription.
+ * Seeds: ["guard", subscription]
+ */
+export function getGuardPDA(
+  subscription: PublicKey,
+  guardProgramId: PublicKey,
+): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("guard"), subscription.toBuffer()],
+    guardProgramId,
   );
 }
 
@@ -43,11 +57,11 @@ export function getSubscriptionPDA(
  * thread_id = "payment"
  */
 export function getThreadPDA(
-  subscriptionPubkey:  PublicKey,
-  clockworkProgramId:  PublicKey = CLOCKWORK_THREAD_PROGRAM_ID
+  subscriptionPubkey: PublicKey,
+  clockworkProgramId: PublicKey = CLOCKWORK_THREAD_PROGRAM_ID,
 ): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [SEEDS.THREAD, subscriptionPubkey.toBuffer(), SEEDS.THREAD],
-    clockworkProgramId
+    clockworkProgramId,
   );
 }
